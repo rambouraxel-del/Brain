@@ -22,7 +22,7 @@ jobs:
           VPS_HOST: ${{ vars.VPS_HOST }}
           VPS_SSH_PORT: ${{ vars.VPS_SSH_PORT }}
           SSH_KEY: ${{ secrets.VPS_DEPLOY_SSH_KEY }}
-          KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+          KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS || vars.VPS_SSH_KNOWN_HOSTS }}
         run: |
           set -Eeuo pipefail
           [[ -n "$VPS_HOST" && -n "$SSH_KEY" && -n "$KNOWN_HOSTS" ]] || {
