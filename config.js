@@ -1,3 +1,3 @@
-// Laisse vide pour une démo locale ; sinon mets l'URL HTTPS de ton API VPS.
-// Exemple : window.BRAIN_CONFIG = { apiBase: 'https://brain-api.ton-domaine.fr' };
-window.BRAIN_CONFIG = { apiBase: '' };
+// Adresse publique de l'API Brain sur le VPS (HTTPS Caddy).
+// Aucun secret ne doit figurer dans ce fichier public.
+window.BRAIN_CONFIG = { apiBase: 'https://brain-api-57-129-178-40.sslip.io' };

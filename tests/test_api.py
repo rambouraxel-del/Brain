@@ -26,3 +26,23 @@ assert len(client.get('/api/notes',headers=headers).json())==0
 assert client.options('/api/notes',headers={'Origin':'https://rambouraxel-del.github.io','Access-Control-Request-Method':'GET'}).headers['access-control-allow-origin']=='https://rambouraxel-del.github.io'
 assert 'access-control-allow-origin' not in client.options('/api/notes',headers={'Origin':'https://evil.example','Access-Control-Request-Method':'GET'}).headers
 print('BACKEND TESTS OK')
+
+# Import d'anciennes notes locales, fusion idempotente et préservation des données.
+legacy = {'id':'legacy-local-001','title':'Idée conservée','content':'copie du navigateur','space':'Idées','tags':['migration'],'pinned':True,'archived':False}
+payload = {'spaces':[{'name':'Anciennes idées','color':'#112233'}], 'notes':[legacy]}
+result = client.post('/api/import',headers=headers,json=payload)
+assert result.status_code == 200 and result.json()['imported'] == 1, result.text
+result = client.post('/api/import',headers=headers,json=payload)
+assert result.status_code == 200 and result.json()['imported'] == 0, result.text
+old_notes = client.get('/api/notes',headers=headers).json()
+assert len(old_notes) == 1 and old_notes[0]['title'] == legacy['title']
+assert old_notes[0]['pinned'] is True
+assert client.get('/api/notes').status_code == 401
+preflight = client.options('/api/notes',headers={
+    'Origin':'https://rambouraxel-del.github.io',
+    'Access-Control-Request-Method':'POST',
+    'Access-Control-Request-Headers':'authorization, content-type'
+})
+assert preflight.status_code == 200, preflight.text
+assert preflight.headers['access-control-allow-origin'] == 'https://rambouraxel-del.github.io'
+print('IMPORT / CORS / AUTH TESTS OK')

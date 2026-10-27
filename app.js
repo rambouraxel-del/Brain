@@ -27,7 +27,7 @@
     spaces: serverMode ? DEFAULT_SPACES : getJSON(SPACE_KEY, DEFAULT_SPACES),
     filter: 'all', query: '', sort: 'recent', view: localStorage.getItem('brain.v1.view') || 'grid',
     editId: null, editPinned: false, editArchived: false,
-    token: serverMode ? (sessionStorage.getItem(TOKEN_KEY) || '') : '', busy: false
+    token: serverMode ? (sessionStorage.getItem(TOKEN_KEY) || '') : '', busy: false, remoteReady: false
   };
   if (!serverMode && initialStored === null) localStorage.setItem(LOCAL_KEY, JSON.stringify(state.notes));
   if (!Array.isArray(state.spaces) || !state.spaces.length) state.spaces = DEFAULT_SPACES;
@@ -43,7 +43,14 @@
   function showModal(id) { $(id).hidden = false; document.body.style.overflow = 'hidden'; }
   function closeModal(id) { $(id).hidden = true; if (![...document.querySelectorAll('.modal-overlay')].some(el => !el.hidden)) document.body.style.overflow = ''; }
   function showLogin(message = '') { $('loginError').textContent = message; showModal('loginOverlay'); setTimeout(() => $('passwordInput').focus(), 80); }
-  function endSession() { state.token = ''; sessionStorage.removeItem(TOKEN_KEY); showLogin(); }
+  function endSession() {
+    state.token = '';
+    state.remoteReady = false;
+    sessionStorage.removeItem(TOKEN_KEY);
+    // Never keep previously authenticated notes visible after logout.
+    if (serverMode) { state.notes = []; state.spaces = DEFAULT_SPACES; state.filter = 'all'; render(); }
+    showLogin();
+  }
   function saveLocal() { localStorage.setItem(LOCAL_KEY, JSON.stringify(state.notes)); localStorage.setItem(SPACE_KEY, JSON.stringify(state.spaces)); }
 
   async function api(path, method = 'GET', data = undefined) {
@@ -59,7 +66,7 @@
   }
   async function reloadRemote() {
     const [notes, spaces] = await Promise.all([api('/notes'), api('/spaces')]);
-    state.notes = notes; state.spaces = spaces;
+    state.notes = notes; state.spaces = spaces; state.remoteReady = true;
     render();
   }
   async function storeNew(payload) {
@@ -147,10 +154,13 @@
     $('clearSearch')?.addEventListener('click', () => {state.query = ''; renderNotes();});
   }
   function renderSync() {
-    const el = $('syncState'); el.classList.toggle('connected',serverMode && !!state.token);
-    el.lastChild.textContent = serverMode ? (state.token ? 'Synchronisé avec ton VPS' : 'Connexion nécessaire') : 'Mode démo · navigateur uniquement';
+    const el = $('syncState'); el.classList.toggle('connected',serverMode && !!state.token && state.remoteReady);
+    el.lastChild.textContent = serverMode ? (state.token && state.remoteReady ? 'Synchronisé avec ton VPS' : state.token ? 'Connexion au VPS indisponible' : 'Connexion nécessaire') : 'Mode démo · navigateur uniquement';
     $('storageExplainer').textContent = serverMode ? 'Tes notes sont stockées sur ton VPS via une API privée. Seule ta session actuelle est conservée ici.' : 'Mode démo : ces notes sont uniquement enregistrées dans ce navigateur. Pas de synchronisation entre appareils.';
     $('storageBadge').textContent = serverMode ? 'VPS' : 'LOCAL'; $('logoutBlock').hidden = !serverMode;
+    const legacy = getJSON(LOCAL_KEY, null);
+    $('legacyImportBlock').hidden = !(serverMode && state.token && state.remoteReady && Array.isArray(legacy) && legacy.length > 0);
+    if (!$('legacyImportBlock').hidden) $('legacyCount').textContent = legacy.length;
   }
   function setFilter(filter) { state.filter = filter; render(); window.scrollTo({top:0,behavior:'smooth'}); }
   async function handleCapture() {
@@ -216,6 +226,21 @@
       closeModal('settingsOverlay');
     } catch(e) {showToast(e.message||'Import impossible.');}finally{$('importFile').value='';}
   }
+  async function importLocalNotes() {
+    if (!serverMode || !state.token || !state.remoteReady) return;
+    const notes = getJSON(LOCAL_KEY, null);
+    if (!Array.isArray(notes) || notes.length === 0) return showToast('Aucune ancienne note locale.');
+    if (!confirm(`Importer ${notes.length} note(s) locales vers Brain ? Tes notes du navigateur seront conservées en sauvegarde.`)) return;
+    const button = $('importLocalButton'); button.disabled = true;
+    try {
+      const localSpaces = getJSON(SPACE_KEY, DEFAULT_SPACES);
+      const result = await api('/import', 'POST', {notes, spaces:Array.isArray(localSpaces) ? localSpaces : DEFAULT_SPACES});
+      await reloadRemote();
+      showToast(`${result.imported} note(s) ajoutée(s) au VPS. Les copies locales sont conservées.`);
+    } catch (e) { showToast(e.message || 'Import des anciennes notes impossible.'); }
+    finally { button.disabled = false; }
+  }
+
   function setupSearch() {
     const panel=document.createElement('div');panel.className='search-panel';panel.hidden=true;panel.innerHTML='<svg class="ic"><use href="#i-search"/></svg><input id="searchBox" type="search" autocomplete="off" placeholder="Rechercher dans toutes tes notes…" aria-label="Recherche globale"/><button type="button" id="searchClose" aria-label="Fermer la recherche">✕</button>';
     document.body.append(panel);
@@ -240,7 +265,9 @@
     try { const response=await fetch(`${API_BASE}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password})});
       if (!response.ok) throw new Error(response.status===429?'Trop de tentatives. Réessaie plus tard.':response.status===401?'Mot de passe incorrect.':'Impossible de se connecter.');
       const result=await response.json();state.token=result.access_token;sessionStorage.setItem(TOKEN_KEY,state.token);$('passwordInput').value='';
-      await reloadRemote();closeModal('loginOverlay');showToast('Bienvenue dans ton espace ✓');
+      await reloadRemote();closeModal('loginOverlay');
+      const legacy = getJSON(LOCAL_KEY, null);
+      showToast(Array.isArray(legacy) && legacy.length ? 'Connecté au VPS ✓ · Anciennes notes disponibles dans Paramètres' : 'Connecté au VPS ✓');
     }catch(e){$('loginError').textContent=e.message;}finally{$('loginButton').disabled=false;}
   }
   function bindEvents() {
@@ -262,6 +289,7 @@
     $('addSpaceButton').addEventListener('click',()=>{showModal('spaceOverlay');$('spaceName').focus();});
     $('spaceClose').addEventListener('click',()=>closeModal('spaceOverlay'));$('spaceSave').addEventListener('click',addSpace);
     $('spaceName').addEventListener('keydown',e=>{if(e.key==='Enter')addSpace();});
+    $('importLocalButton').addEventListener('click',importLocalNotes);
     $('exportButton').addEventListener('click',exportData);$('importButton').addEventListener('click',()=>$('importFile').click());$('importFile').addEventListener('change',e=>importData(e.target.files?.[0]));
     $('logoutButton').addEventListener('click',()=>{closeModal('settingsOverlay');endSession();});
     $('loginButton').addEventListener('click',doLogin);$('passwordInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});

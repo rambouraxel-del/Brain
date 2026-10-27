@@ -65,7 +65,13 @@ Génère la clé secrète avec `python3 -c "import secrets;print(secrets.token_u
 
 En production, la configuration est gérée par le dépôt privé `VPS-auto` (script SSH restreint) et reliée au Caddy Docker de `VTD-BOT`. Le domaine gratuit retenu est `https://brain-api-57-129-178-40.sslip.io`, avec certificats HTTPS automatiques par Caddy. Le déploiement de l'API est conditionné à la variable GitHub `BRAIN_VPS_DEPLOY_ENABLED=true`. N'expose pas directement le port de l'API sur Internet.
 
-### 4) Relier Pages au VPS
+### 4) Relier Pages au VPS (configuré)
+
+**Brain est configuré en production** pour utiliser `https://brain-api-57-129-178-40.sslip.io`. Le fichier public `config.js` contient uniquement cette adresse, jamais de mot de passe. L'interface se connecte au VPS par HTTPS. À la première visite, entre le mot de passe créé sur le VPS.
+
+**Migration du mode démo :** les anciennes notes restent dans le stockage local du même navigateur ; elles ne sont pas effacées. Après connexion, ouvre **Paramètres → Retrouver mes anciennes notes locales → Transférer**. La fusion ignore les doublons et conserve les copies locales. Tu peux également exporter / importer un fichier JSON.
+
+### 4 bis) Configuration manuelle alternative
 
 Modifie **uniquement** `config.js` dans le dépôt public :
 

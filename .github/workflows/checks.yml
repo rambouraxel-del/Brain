@@ -119,3 +119,42 @@ jobs:
             -o ConnectTimeout=20 -o ServerAliveInterval=20 \
             "brain-deploy@$VPS_HOST" "deploy-brain $GITHUB_SHA"
 
+
+  verify_live:
+    name: Vérifier Brain en HTTPS après publication
+    needs: [deploy, deploy_api]
+    if: github.event_name != 'pull_request' && vars.BRAIN_VPS_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Tester API HTTPS, authentification et CORS
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          API=https://brain-api-57-129-178-40.sslip.io
+          ORIGIN=https://rambouraxel-del.github.io
+          curl --fail --silent --show-error --retry 4 --retry-delay 3 --max-time 15 "$API/api/health" |
+            python3 -c 'import json,sys; assert json.load(sys.stdin)=={"ok":True}; print("API HTTPS OK")'
+          code="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 15 "$API/api/notes")"
+          [[ "$code" == "401" ]] || { echo "::error::Notes non protégées (HTTP $code)"; exit 1; }
+          echo "Accès non authentifié refusé (401) OK"
+          headers="$(mktemp)"
+          code="$(curl -sS -o /dev/null -D "$headers" -w '%{http_code}' --max-time 15 \
+            -X OPTIONS "$API/api/notes" -H "Origin: $ORIGIN" \
+            -H 'Access-Control-Request-Method: POST' \
+            -H 'Access-Control-Request-Headers: authorization, content-type')"
+          [[ "$code" == "200" ]] || { echo "::error::Prévol CORS échoué (HTTP $code)"; exit 1; }
+          grep -iqF "access-control-allow-origin: $ORIGIN" "$headers" || {
+            echo "::error::Origine GitHub Pages non autorisée"; exit 1;
+          }
+          echo "CORS navigateur OK"
+      - name: Vérifier la configuration publiée sur GitHub Pages
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          curl -fsSL --retry 4 --retry-delay 3 --max-time 15 \
+            'https://rambouraxel-del.github.io/Brain/config.js' \
+            | grep -Fq "apiBase: 'https://brain-api-57-129-178-40.sslip.io'" || {
+              echo "::error::Frontend non relié au VPS"; exit 1;
+            }
+          echo "Frontend public relié au VPS OK"
