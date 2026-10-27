@@ -39,11 +39,13 @@ Puis ouvre `http://localhost:8080`. La configuration `config.js` par défaut a `
 
 ### 2) Publier l'interface avec GitHub Pages
 
-1. Crée un dépôt public, par exemple `brain`, et envoie le contenu du projet (code uniquement, **jamais tes notes ni le fichier `.env`**).
-2. Sur GitHub : **Settings → Pages → Deploy from a branch → main / (root)**.
-3. Ouvre `https://TON-PSEUDO.github.io/brain/`.
+Le dépôt contient déjà le workflow `.github/workflows/checks.yml`, qui **teste l'application et publie automatiquement le frontend** à chaque push sur `main`, seulement si les tests passent.
 
-Les fichiers frontend (`index.html`, `styles.css`, `app.js`, `config.js`, `favicon.svg`) sont à la racine pour Pages. `backend/`, `.github/`, `tests/` et les fichiers Docker sont présents pour versionner aussi ton serveur. GitHub Pages ne les exécute pas. La CI teste le code à chaque push.
+Pour activer la première publication, ouvre **Settings → Pages → Build and deployment → Source** et sélectionne **GitHub Actions** (une seule fois). Tu n'as pas besoin de choisir un modèle de workflow : celui de Brain est déjà configuré.
+
+Puis ouvre `https://rambouraxel-del.github.io/Brain/`.
+
+Le workflow prépare un artefact contenant **seulement** `index.html`, `styles.css`, `app.js`, `config.js`, `favicon.svg` et `.nojekyll`. Les dossiers `backend/`, `tests/`, ainsi que les exemples d'environnement, ne sont pas servis comme site web. Ne mets jamais tes notes ou de véritables secrets dans les fichiers GitHub.
 
 **Important :** un site Pages seul ne peut pas enregistrer les données dans SQLite sur ton VPS. Il doit appeler l'API HTTPS privée ci-dessous. Ne mets **jamais** ton `.env` ou un mot de passe dans le dépôt ni dans `config.js`.
 
