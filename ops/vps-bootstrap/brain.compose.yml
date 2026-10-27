@@ -21,3 +21,10 @@ services:
       - /tmp:rw,noexec,nosuid,size=32m
     volumes:
       - /var/lib/brain/data:/data:rw
+    networks:
+      - vtd_default
+
+networks:
+  vtd_default:
+    external: true
+    name: vtd_default
