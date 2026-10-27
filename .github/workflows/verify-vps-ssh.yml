@@ -1,0 +1,58 @@
+name: Vérifier SSH VPS (sans déploiement)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-vps-ssh.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Tester le compte SSH restreint
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Tester la connexion et le refus des commandes non autorisées
+        shell: bash
+        env:
+          VPS_HOST: ${{ vars.VPS_HOST }}
+          VPS_SSH_PORT: ${{ vars.VPS_SSH_PORT }}
+          SSH_KEY: ${{ secrets.VPS_DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+        run: |
+          set -Eeuo pipefail
+          [[ -n "$VPS_HOST" && -n "$SSH_KEY" && -n "$KNOWN_HOSTS" ]] || {
+            echo "::error::Il manque une variable ou un secret GitHub Brain."
+            exit 1
+          }
+          [[ "$VPS_HOST" =~ ^[A-Za-z0-9.-]+$ ]] || { echo "::error::VPS_HOST invalide"; exit 1; }
+          VPS_SSH_PORT="${VPS_SSH_PORT:-22}"
+          [[ "$VPS_SSH_PORT" =~ ^[0-9]{1,5}$ ]] && (( VPS_SSH_PORT >= 1 && VPS_SSH_PORT <= 65535 )) || { echo "::error::Port SSH invalide"; exit 1; }
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_KEY" > "$HOME/.ssh/brain_deploy"
+          chmod 600 "$HOME/.ssh/brain_deploy"
+          printf '%s\n' "$KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          set +e
+          output=$(ssh -i "$HOME/.ssh/brain_deploy" -p "$VPS_SSH_PORT" \
+            -o StrictHostKeyChecking=yes -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o ConnectTimeout=15 -o ServerAliveInterval=10 \
+            "brain-deploy@$VPS_HOST" "brain-ssh-connectivity-check" 2>&1)
+          exit_code=$?
+          set -e
+          if [[ "$exit_code" -eq 64 && "$output" == *"Commande refusée"* ]]; then
+            echo "OK : connexion SSH authentifiée et compte restreint confirmé."
+            exit 0
+          fi
+          echo "::error::Contrôle SSH échoué (code $exit_code). La commande n'a pas déclenché de déploiement."
+          # Display only known, non-secret error classifications
+          if [[ "$output" == *"Host key verification failed"* ]]; then echo "::error::Clé d'hôte SSH non reconnue."; fi
+          if [[ "$output" == *"Permission denied"* ]]; then echo "::error::Clé privée SSH refusée par le VPS."; fi
+          if [[ "$output" == *"Connection timed out"* ]]; then echo "::error::VPS/port SSH inaccessible."; fi
+          if [[ "$output" == *"Connection refused"* ]]; then echo "::error::Connexion SSH refusée."; fi
+          exit 1
