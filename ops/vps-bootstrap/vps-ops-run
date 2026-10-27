@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Restricted root operations, no user-supplied paths, flags or shell commands.
+set -Eeuo pipefail
+[[ "$EUID" -eq 0 && "$#" -eq 1 ]] || exit 64
+operation="$1"
+logger -p authpriv.notice -t vps-ops "REQUEST operation=$operation"
+case "$operation" in
+  status)
+    docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+    df -h /
+    ;;
+  health)
+    curl --fail --show-error --silent --max-time 8 http://127.0.0.1:8787/api/health
+    echo
+    curl --fail --show-error --silent --max-time 15 https://brain-api-57-129-178-40.sslip.io/api/health
+    echo
+    ;;
+  brain-logs) docker logs --tail 80 brain-brain-api-1 2>&1 ;;
+  proxy-logs) docker logs --tail 80 vtd-web-1 2>&1 ;;
+  caddy-check) docker exec vtd-web-1 caddy validate --config /etc/caddy/Caddyfile ;;
+  caddy-reload)
+    docker exec vtd-web-1 caddy validate --config /etc/caddy/Caddyfile
+    docker exec vtd-web-1 caddy reload --config /etc/caddy/Caddyfile
+    ;;
+  brain-restart) docker restart --time 15 brain-brain-api-1 ;;
+  brain-backup) /usr/local/sbin/vps-auto-backup-brain ;;
+  *) echo 'Operation interdite.' >&2; exit 64 ;;
+esac
+logger -p authpriv.notice -t vps-ops "SUCCESS operation=$operation"
