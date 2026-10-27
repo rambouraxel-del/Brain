@@ -1,15 +1,17 @@
-name: Vérifications Brain
+name: Vérifications et déploiement Brain
 
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   checks:
+    name: Tests et syntaxe
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,3 +29,35 @@ jobs:
         run: |
           node --check app.js
           node --check config.js
+
+  deploy:
+    name: Publication GitHub Pages
+    if: github.event_name != 'pull_request'
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Préparer uniquement les fichiers publics
+        run: |
+          mkdir -p _site
+          cp index.html styles.css app.js config.js favicon.svg .nojekyll _site/
+          test -s _site/index.html
+      - name: Configurer GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Préparer l'archive Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+      - name: Déployer le site
+        id: deployment
+        uses: actions/deploy-pages@v4
