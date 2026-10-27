@@ -1,0 +1,19 @@
+services:
+  brain-api:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8787:8787"
+    env_file:
+      - .env
+    environment:
+      BRAIN_DB_PATH: /data/brain.sqlite3
+    volumes:
+      - brain_data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  brain_data:

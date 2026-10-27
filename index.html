@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <meta name="description" content="Un espace privé pour capturer, organiser et retrouver toutes tes idées." />
+    <title>Brain — Ton deuxième cerveau</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <svg aria-hidden="true" class="svg-defs" xmlns="http://www.w3.org/2000/svg">
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></symbol>
+      <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 4h16l2 12v4H2v-4L4 4Z" /><path d="M2 15h6l2 3h4l2-3h6" /></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 3.5h14a2 2 0 0 1 2 2V20H7a4 4 0 0 1-4-4V5.5a2 2 0 0 1 2-2Z" /><path d="M3 16a4 4 0 0 1 4-4h14" /></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="m16 3 5 5-3 1-3 4 1 3-2 2-4-4-6 7 3-8-4-4 2-2 3 1 4-3 1-2Z" /></symbol>
+      <symbol id="i-archive" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="5" rx="1" /><path d="M5 9v11h14V9M10 13h4" /></symbol>
+      <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="m12 2 2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4L12 2Z" /></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><path d="M10 2h4l.7 2.5 2.2 1.2 2.4-.8 2 3.4-1.8 1.9v2.5l1.8 1.9-2 3.4-2.4-.8-2.2 1.2L14 21h-4l-.7-2.5-2.2-1.2-2.4.8-2-3.4 1.8-1.9v-2.5L2.7 8.4l2-3.4 2.4.8 2.2-1.2L10 2Z" /><circle cx="12" cy="11.5" r="3" /></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6" /></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6" /></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 15.3A8.5 8.5 0 0 1 8.7 4 8.5 8.5 0 1 0 20 15.3Z" /></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42m0-14.14-1.42 1.42M6.35 17.65l-1.42 1.42"/></symbol>
+      <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M5 5 19 19M19 5 5 19" /></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v5m4-5v5" /></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4" /></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5M4 17v4h16v-4" /></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" /></symbol>
+      <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 3H4v18h5m4-14 5 5-5 5m5-5H8" /></symbol>
+      <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></symbol>
+    </svg>
+
+    <div class="app-shell" id="appShell">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand"><div class="brand-symbol"><span class="orb orb-a"></span><span class="orb orb-b"></span></div><div class="brand-copy">brain<span class="brand-period">.</span><small>ESPACE PERSONNEL</small></div></div>
+        <div class="sidebar-workspace"><span class="workspace-avatar">A</span><div class="workspace-info"><strong>Mon espace</strong><small>Un endroit pour tout penser</small></div><svg class="ic subtle-icon"><use href="#i-chevron"/></svg></div>
+        <div class="nav-caption">ESPACE DE TRAVAIL</div>
+        <nav class="sidebar-nav" aria-label="Navigation principale" id="mainNav">
+          <button class="nav-item active" data-filter="all"><svg class="ic"><use href="#i-grid"/></svg><span>Toutes mes notes</span><span class="nav-count" id="navCountAll">0</span></button>
+          <button class="nav-item" data-filter="inbox"><svg class="ic"><use href="#i-inbox"/></svg><span>Boîte de réception</span><span class="nav-count" id="navCountInbox">0</span></button>
+          <button class="nav-item" data-filter="pinned"><svg class="ic"><use href="#i-pin"/></svg><span>Épinglées</span></button>
+          <button class="nav-item" data-filter="archived"><svg class="ic"><use href="#i-archive"/></svg><span>Archives</span></button>
+        </nav>
+        <div class="sidebar-divider"></div>
+        <div class="nav-caption nav-caption-space"><span>MES ESPACES</span><button type="button" class="micro-add" id="addSpaceButton" title="Nouvel espace" aria-label="Nouvel espace"><svg class="ic"><use href="#i-plus"/></svg></button></div>
+        <nav class="sidebar-nav spaces-nav" id="spaceNav" aria-label="Espaces"></nav>
+        <div class="sidebar-bottom">
+          <div class="quiet-tip"><div class="quiet-tip-icon"><svg class="ic"><use href="#i-sparkle"/></svg></div><strong>Une idée à la fois.</strong><p>Tout commence par une pensée que l’on décide de garder.</p></div>
+          <button class="nav-item nav-settings" id="settingsButton"><svg class="ic"><use href="#i-settings"/></svg><span>Paramètres</span></button>
+        </div>
+      </aside>
+
+      <div class="page-shell">
+        <header class="topbar"><div class="mobile-brand"><span class="mini-logo">b.</span><strong>brain.</strong></div><div class="breadcrumbs"><span>Espace personnel</span><svg class="ic"><use href="#i-chevron"/></svg><strong id="breadcrumbLabel">Toutes mes notes</strong></div><div class="top-actions"><button id="searchTrigger" class="search-trigger"><svg class="ic"><use href="#i-search"/></svg><span>Rechercher une idée...</span><kbd>⌘ K</kbd></button><button id="themeButton" class="round-button" title="Changer de thème" aria-label="Changer de thème"><svg class="ic" id="themeIcon"><use href="#i-moon"/></svg></button><div class="profile-dot" title="Espace personnel">A</div></div></header>
+        <main class="content" id="content">
+          <section class="welcome"><div class="eyebrow"><span class="eyebrow-star">✳</span> TON ESPACE DE CLARTÉ</div><div class="welcome-row"><div><h1>Tout commence par <em>une idée.</em></h1><p>Un espace pour capturer tes pensées, leur donner forme et ne plus rien oublier.</p></div><div class="date-chip" id="todayChip"></div></div></section>
+          <section class="capture" aria-labelledby="captureTitle"><div class="capture-head"><div class="capture-icon"><svg class="ic"><use href="#i-sparkle"/></svg></div><div><h2 id="captureTitle">Une idée en tête ?</h2><p>Pose-la ici, on s’occupe du reste.</p></div><span class="capture-shortcut">CTRL + ENTRÉE</span></div><label class="sr-only" for="quickInput">Écrire une idée</label><textarea id="quickInput" rows="3" placeholder="Note une idée, une réflexion, quelque chose à ne pas oublier..."></textarea><div class="capture-foot"><div class="capture-meta"><label class="select-wrap"><svg class="ic"><use href="#i-book"/></svg><select id="quickSpace" aria-label="Choisir un espace"></select></label><label class="tags-wrap"><span>#</span><input type="text" id="quickTags" maxlength="150" placeholder="Tags (facultatif)" aria-label="Tags séparés par une virgule"/></label></div><button type="button" class="primary-button" id="captureButton"><svg class="ic"><use href="#i-plus"/></svg> Enregistrer l’idée</button></div></section>
+          <section class="overview" aria-label="Aperçu"><div class="overview-card"><div class="overview-icon violet">✦</div><div><strong id="statNotes">0</strong><span>Notes enregistrées</span></div></div><div class="overview-card"><div class="overview-icon peach">◈</div><div><strong id="statSpaces">0</strong><span>Espaces actifs</span></div></div><div class="overview-card"><div class="overview-icon green">↗</div><div><strong id="statWeek">0</strong><span>Cette semaine</span></div></div></section>
+          <section class="notes-section"><div class="notes-heading"><div><span class="section-overline" id="listOverline">TA BIBLIOTHÈQUE</span><h2 id="listTitle">Toutes mes notes <span class="heading-count" id="resultCount">0</span></h2></div><div class="notes-controls"><div class="sort-wrap"><span>Trier :</span><select id="sortSelect" aria-label="Trier les notes"><option value="recent">Plus récentes</option><option value="oldest">Plus anciennes</option><option value="az">Titre A–Z</option></select></div><div class="view-switch" role="group" aria-label="Mode d'affichage"><button id="gridButton" class="selected" title="Grille" aria-label="Affichage grille"><svg class="ic"><use href="#i-grid"/></svg></button><button id="listButton" title="Liste" aria-label="Affichage liste"><svg class="ic"><use href="#i-list"/></svg></button></div></div></div><div id="activeSearch" class="active-search" hidden></div><div id="notesGrid" class="notes-grid"></div><div class="empty-state" id="emptyState" hidden><div class="empty-state-mark">✳</div><h3 id="emptyTitle">Ton esprit a de la place.</h3><p id="emptyText">Ta prochaine grande idée mérite d'être notée. Commence juste au-dessus !</p><button class="secondary-button" id="emptyNewButton"><svg class="ic"><use href="#i-plus"/></svg> Écrire une idée</button></div></section>
+          <footer class="footer"><span>Fait pour les idées qui méritent de rester.</span><span class="sync-state" id="syncState"><span class="sync-dot"></span> Vérification...</span></footer>
+        </main>
+      </div>
+    </div>
+
+    <nav class="mobile-nav" aria-label="Navigation mobile"><button data-mobile-filter="all" class="active"><svg class="ic"><use href="#i-grid"/></svg><span>Notes</span></button><button data-mobile-filter="inbox"><svg class="ic"><use href="#i-inbox"/></svg><span>Inbox</span></button><button id="mobileCapture" class="mobile-plus" aria-label="Nouvelle idée"><svg class="ic"><use href="#i-plus"/></svg></button><button data-mobile-filter="pinned"><svg class="ic"><use href="#i-pin"/></svg><span>Favoris</span></button><button id="mobileSettings"><svg class="ic"><use href="#i-settings"/></svg><span>Réglages</span></button></nav>
+
+    <div class="modal-overlay" id="editorOverlay" hidden><div class="dialog editor-dialog" role="dialog" aria-modal="true" aria-labelledby="editorTitle"><div class="dialog-top"><div class="dialog-title"><span class="dialog-kicker">DANS TON CERVEAU</span><h2 id="editorTitle">Modifier la note</h2></div><button class="icon-button" id="editorClose" aria-label="Fermer"><svg class="ic"><use href="#i-close"/></svg></button></div><div class="dialog-body"><label for="editTitle">Titre</label><input id="editTitle" type="text" maxlength="140" placeholder="Donne un titre à cette idée"/><label for="editContent">Ta note</label><textarea id="editContent" rows="9" placeholder="Développe ta pensée..."></textarea><div class="dialog-fields"><div><label for="editSpace">Espace</label><select id="editSpace"></select></div><div><label for="editTags">Tags</label><input id="editTags" type="text" placeholder="créatif, à explorer..." maxlength="200"/></div></div></div><div class="dialog-bottom"><div class="edit-actions"><button id="editPin" class="icon-text-button"><svg class="ic"><use href="#i-pin"/></svg><span>Épingler</span></button><button id="editArchive" class="icon-text-button"><svg class="ic"><use href="#i-archive"/></svg><span>Archiver</span></button><button id="editDelete" class="icon-text-button danger"><svg class="ic"><use href="#i-trash"/></svg><span>Supprimer</span></button></div><button id="saveEdit" class="primary-button"><svg class="ic"><use href="#i-check"/></svg> Sauvegarder</button></div></div></div>
+    <div class="modal-overlay" id="settingsOverlay" hidden><div class="dialog settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="dialog-top"><div class="dialog-title"><span class="dialog-kicker">TON ESPACE</span><h2 id="settingsTitle">Paramètres</h2></div><button class="icon-button" id="settingsClose" aria-label="Fermer"><svg class="ic"><use href="#i-close"/></svg></button></div><div class="settings-body"><div class="setting-block"><div><strong>Sauvegarde des notes</strong><p id="storageExplainer">Tes notes sont stockées localement dans ce navigateur.</p></div><span class="setting-label" id="storageBadge">LOCAL</span></div><div class="setting-block"><div><strong>Exporter mes données</strong><p>Télécharger toutes tes idées dans un fichier JSON.</p></div><button class="secondary-button small" id="exportButton"><svg class="ic"><use href="#i-download"/></svg> Exporter</button></div><div class="setting-block"><div><strong>Importer des notes</strong><p>Importer un export Brain (fusion sans doublons).</p></div><button class="secondary-button small" id="importButton"><svg class="ic"><use href="#i-upload"/></svg> Importer</button><input type="file" id="importFile" accept="application/json,.json" hidden/></div><div class="setting-block" id="logoutBlock" hidden><div><strong>Déconnexion</strong><p>Fermer ta session sur cet appareil.</p></div><button class="secondary-button small" id="logoutButton"><svg class="ic"><use href="#i-logout"/></svg> Quitter</button></div><div class="settings-notice"><svg class="ic"><use href="#i-lock"/></svg><p>Ce site est personnel. Évite d’y copier des données confidentielles de ton entreprise ou des informations protégées.</p></div></div></div></div>
+    <div class="modal-overlay" id="spaceOverlay" hidden><div class="dialog small-dialog" role="dialog" aria-modal="true" aria-labelledby="spaceTitle"><div class="dialog-top"><div class="dialog-title"><span class="dialog-kicker">ORGANISER TES IDÉES</span><h2 id="spaceTitle">Nouvel espace</h2></div><button class="icon-button" id="spaceClose" aria-label="Fermer"><svg class="ic"><use href="#i-close"/></svg></button></div><div class="dialog-body"><label for="spaceName">Nom de l’espace</label><input id="spaceName" type="text" maxlength="40" placeholder="Ex. Mes projets, Marketing..."/></div><div class="dialog-bottom justify-end"><button id="spaceSave" class="primary-button">Créer l’espace</button></div></div></div>
+    <div class="modal-overlay" id="loginOverlay" hidden><div class="dialog login-dialog" role="dialog" aria-modal="true" aria-labelledby="loginTitle"><div class="login-brand"><div class="brand-symbol"><span class="orb orb-a"></span><span class="orb orb-b"></span></div><strong>brain<span class="brand-period">.</span></strong></div><div class="login-lock"><svg class="ic"><use href="#i-lock"/></svg></div><h2 id="loginTitle">Ton espace privé.</h2><p>Entre ton mot de passe pour retrouver toutes tes idées synchronisées.</p><label class="sr-only" for="passwordInput">Mot de passe</label><input id="passwordInput" type="password" placeholder="Mot de passe" autocomplete="current-password"/><p class="login-error" id="loginError" role="alert"></p><button id="loginButton" class="primary-button block">Accéder à mon cerveau <svg class="ic"><use href="#i-arrow"/></svg></button><small>Une seule tête. Toutes tes idées.</small></div></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <script src="config.js"></script>
+    <script defer src="app.js"></script>
+  </body>
+</html>
