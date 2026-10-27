@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Forced SSH command: the deploy key cannot open a shell or run arbitrary commands.
+set -euo pipefail
+request="${SSH_ORIGINAL_COMMAND:-}"
+pattern='^deploy-brain ([a-f0-9]{40})$'
+if [[ "$request" =~ $pattern ]]; then
+  exec /usr/bin/sudo -n /usr/local/sbin/vps-auto-deploy-brain "${BASH_REMATCH[1]}"
+fi
+printf 'Commande refusée : seul deploy-brain <SHA40> est autorisé.\n' >&2
+exit 64

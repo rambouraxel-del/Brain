@@ -1,0 +1,7 @@
+# ONLY if Caddy runs on the VPS host. If Caddy runs in Docker, first inspect its network.
+# ADD this block to the EXISTING Caddyfile after checking the hostname and DNS.
+# Do not replace Polar Rift's existing configuration!
+brain-api.example.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8787
+}

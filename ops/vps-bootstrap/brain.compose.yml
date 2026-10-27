@@ -1,0 +1,23 @@
+# Root-owned compose file on the VPS. Never accept a Docker Compose file from SSH input.
+services:
+  brain-api:
+    image: ${BRAIN_IMAGE:?BRAIN_IMAGE must be set by root deployment script}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8787:8787"
+    env_file:
+      - /etc/brain/.env
+    environment:
+      BRAIN_DB_PATH: /data/brain.sqlite3
+    user: "10001:10001"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 256m
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    volumes:
+      - /var/lib/brain/data:/data:rw

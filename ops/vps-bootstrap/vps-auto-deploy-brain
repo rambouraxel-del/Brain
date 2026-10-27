@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Root-owned, parameter-validated deployment. Invoked through sudo by the forced SSH entry point.
+set -Eeuo pipefail
+umask 077
+SHA="${1:-}"
+[[ "$#" -eq 1 && "$SHA" =~ ^[a-f0-9]{40}$ ]] || { echo 'SHA Git invalide.' >&2; exit 64; }
+exec 9>/run/lock/vps-auto-brain.lock
+flock -n 9 || { echo 'Un autre déploiement Brain est en cours.' >&2; exit 75; }
+
+CONFIG=/etc/brain/.env
+COMPOSE=/etc/vps-auto/brain.compose.yml
+REPO=/opt/brain/source
+CURRENT=/var/lib/brain/current-image
+[[ -f "$CONFIG" && -f "$COMPOSE" ]] || { echo 'Installation incomplète : configuration absente.' >&2; exit 1; }
+# Explicitly reject bootstrap placeholders; never print credentials.
+if grep -Eq '^(BRAIN_PASSWORD|BRAIN_SIGNING_KEY)=(REPLACE_ME|CHANGE_ME|Change-moi-)' "$CONFIG"; then
+  echo 'Configure BRAIN_PASSWORD et BRAIN_SIGNING_KEY dans /etc/brain/.env.' >&2
+  exit 1
+fi
+if ! grep -Eq '^BRAIN_ALLOWED_ORIGINS=https://' "$CONFIG"; then
+  echo 'Origine HTTPS manquante dans /etc/brain/.env.' >&2
+  exit 1
+fi
+
+if [[ ! -d "$REPO/.git" ]]; then
+  mkdir -p /opt/brain
+  git clone --no-checkout --depth=1 https://github.com/rambouraxel-del/Brain.git "$REPO"
+fi
+# Deploy ONLY the latest commit from the trusted main branch (no arbitrary ref).
+git -C "$REPO" fetch --depth=1 origin main
+REMOTE_SHA="$(git -C "$REPO" rev-parse FETCH_HEAD)"
+[[ "$REMOTE_SHA" == "$SHA" ]] || { echo 'SHA non égal au HEAD de Brain/main, déploiement refusé.' >&2; exit 65; }
+git -C "$REPO" checkout --force --detach "$SHA" >/dev/null
+IMAGE="brain-v1:$SHA"
+if [[ -s "$CURRENT" ]] && [[ "$(cat "$CURRENT")" == "$IMAGE" ]] && curl --fail --silent --max-time 3 http://127.0.0.1:8787/api/health >/dev/null; then
+  echo "Brain déjà à jour : ${SHA:0:12}"
+  exit 0
+fi
+
+# Build locally without Docker registry or extra tokens; confined runtime is defined above.
+docker build -t "$IMAGE" -f "$REPO/backend/Dockerfile" "$REPO/backend"
+PREVIOUS=''
+if [[ -s "$CURRENT" ]]; then
+  PREVIOUS="$(cat "$CURRENT")"
+  [[ "$PREVIOUS" =~ ^brain-v1:[a-f0-9]{40}$ ]] || { echo 'État local invalide.' >&2; exit 1; }
+fi
+export BRAIN_IMAGE="$IMAGE"
+docker compose --project-name brain -f "$COMPOSE" up -d --no-deps --force-recreate
+healthy=false
+for _ in $(seq 1 30); do
+  if curl --fail --silent --max-time 3 http://127.0.0.1:8787/api/health >/dev/null; then
+    healthy=true
+    break
+  fi
+  sleep 2
+done
+if [[ "$healthy" != true ]]; then
+  echo 'Brain n’a pas répondu au contrôle de santé.' >&2
+  if [[ -z "$PREVIOUS" ]]; then
+    docker compose --project-name brain -f "$COMPOSE" stop brain-api || true
+  fi
+  if [[ -n "$PREVIOUS" ]]; then
+    echo 'Retour à la version précédente…' >&2
+    export BRAIN_IMAGE="$PREVIOUS"
+    docker compose --project-name brain -f "$COMPOSE" up -d --no-deps --force-recreate
+  fi
+  exit 1
+fi
+printf '%s\n' "$IMAGE" > "$CURRENT.tmp"
+mv -f "$CURRENT.tmp" "$CURRENT"
+echo "Déploiement Brain OK : ${SHA:0:12}"

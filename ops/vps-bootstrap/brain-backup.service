@@ -1,0 +1,5 @@
+[Unit]
+Description=Create a consistent local Brain SQLite backup
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/vps-auto-backup-brain
