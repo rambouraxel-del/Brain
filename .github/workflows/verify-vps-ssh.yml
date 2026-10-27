@@ -55,4 +55,12 @@ jobs:
           if [[ "$output" == *"Permission denied"* ]]; then echo "::error::Clé privée SSH refusée par le VPS."; fi
           if [[ "$output" == *"Connection timed out"* ]]; then echo "::error::VPS/port SSH inaccessible."; fi
           if [[ "$output" == *"Connection refused"* ]]; then echo "::error::Connexion SSH refusée."; fi
+          if [[ "$output" == *"No ED25519 host key is known"* || "$output" == *"REMOTE HOST IDENTIFICATION HAS CHANGED"* ]]; then echo "::error::Clé d'hôte du serveur incorrecte."; fi
+          if [[ "$output" == *"Load key"* || "$output" == *"invalid format"* || "$output" == *"error in libcrypto"* ]]; then echo "::error::Format de la clé privée invalide."; fi
+          if [[ "$output" == *"No route to host"* || "$output" == *"Could not resolve hostname"* ]]; then echo "::error::Adresse réseau inaccessible."; fi
+          if [[ "$output" == *"Connection closed"* || "$output" == *"Connection reset"* ]]; then echo "::error::Connexion fermée côté serveur."; fi
+          if [[ "$output" == *"Commande refusée"* ]]; then echo "::error::Le compte restreint répond, mais son code de sortie est inattendu."; fi
+          if [[ "$output" == *"command not found"* || "$output" == *"Permission denied"*"sudo"* ]]; then echo "::error::Commande SSH forcée ou droits serveur incorrects."; fi
+          # Safe protocol-level diagnostic only: no raw SSH output, key material or secrets.
+          echo "::notice::Code SSH : $exit_code ; motifs vérifiés sans publication des clés."
           exit 1
