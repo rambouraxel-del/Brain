@@ -30,6 +30,18 @@ jobs:
           node --check app.js
           node --check config.js
 
+      - name: Vérifier l'image Docker avec l'utilisateur non privilégié
+        run: |
+          set -Eeuo pipefail
+          # Reproduce the source permission inherited from VPS's umask 077.
+          chmod 600 backend/main.py
+          docker build -t brain-api-ci -f backend/Dockerfile backend
+          docker run --rm --read-only --tmpfs /data:rw,uid=10001,gid=10001,mode=0700 \
+            -e BRAIN_PASSWORD=ci_test_password_only_not_for_production \
+            -e BRAIN_SIGNING_KEY=ci_test_signing_key_only_not_for_production_12345678 \
+            -e BRAIN_ALLOWED_ORIGINS=https://example.com \
+            brain-api-ci python -c 'import main; assert main.health() == {"ok": True}; print("Brain container health OK")'
+
   deploy:
     name: Publication GitHub Pages
     if: github.event_name != 'pull_request'
