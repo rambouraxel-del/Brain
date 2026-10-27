@@ -1,7 +1,11 @@
-# ONLY if Caddy runs on the VPS host. If Caddy runs in Docker, first inspect its network.
-# ADD this block to the EXISTING Caddyfile after checking the hostname and DNS.
-# Do not replace Polar Rift's existing configuration!
+# Caddy runs inside the VTD-BOT Docker network "vtd_default".
+# Add this as a SEPARATE site block to the EXISTING
+# /home/ubuntu/VTD-BOT/deploy/Caddyfile, without replacing existing routes.
+# Replace brain-api.example.com with the real DNS name pointed to your VPS.
 brain-api.example.com {
     encode zstd gzip
-    reverse_proxy 127.0.0.1:8787
+    reverse_proxy brain-api:8787
 }
+
+# Caddy Docker container and Brain API must share vtd_default.
+# NEVER use 127.0.0.1:8787 inside the Caddy container.
