@@ -74,10 +74,30 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+  changes:
+    name: Détecter les modifications du backend
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'tests/test_api.py'
+              - 'docker-compose.yml'
+              - '.github/workflows/checks.yml'
+              - 'ops/vps-bootstrap/**'
+
   deploy_api:
     name: Déployer API Brain sur VPS
-    needs: checks
-    if: github.event_name != 'pull_request' && vars.BRAIN_VPS_DEPLOY_ENABLED == 'true'
+    needs: [checks, changes]
+    if: github.event_name != 'pull_request' && vars.BRAIN_VPS_DEPLOY_ENABLED == 'true' && (needs.changes.outputs.backend == 'true' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     concurrency:
@@ -123,7 +143,7 @@ jobs:
   verify_live:
     name: Vérifier Brain en HTTPS après publication
     needs: [deploy, deploy_api]
-    if: github.event_name != 'pull_request' && vars.BRAIN_VPS_DEPLOY_ENABLED == 'true'
+    if: github.event_name != 'pull_request' && vars.BRAIN_VPS_DEPLOY_ENABLED == 'true' && (needs.deploy_api.result == 'success' || needs.deploy_api.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
