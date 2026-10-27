@@ -21,7 +21,7 @@ Téléphone / navigateur
 GitHub Pages (frontend public, aucun mot de passe ni note dans le dépôt)
          │  API HTTPS + jeton de session temporaire
          ▼
-Nginx (VPS OVH)
+Caddy (VPS OVH, réseau Docker partagé `vtd_default`)
          │
          ▼
 Docker : FastAPI ── SQLite (volume persistant)
@@ -63,14 +63,14 @@ curl http://127.0.0.1:8787/api/health
 
 Génère la clé secrète avec `python3 -c "import secrets;print(secrets.token_urlsafe(48))"`. Choisis un mot de passe fort et unique, **14 caractères minimum**. **Les valeurs d’exemple sont volontairement refusées par l’API : il faut les remplacer avant de démarrer.** Pour `BRAIN_ALLOWED_ORIGINS`, mets l'ORIGINE exacte (`https://pseudo.github.io`, sans `/brain/`), ou ton domaine web personnalisé.
 
-L'API n'écoute sur le VPS que sur `127.0.0.1:8787`, donc pas directement sur Internet. Configure Nginx et HTTPS sur un sous-domaine, par exemple `https://brain-api.ton-domaine.fr`. Le fichier `nginx-brain-api.conf.example` donne le bloc de proxy. Pense à renouveler automatiquement ton certificat TLS.
+En production, la configuration est gérée par le dépôt privé `VPS-auto` (script SSH restreint) et reliée au Caddy Docker de `VTD-BOT`. Le domaine gratuit retenu est `https://brain-api-57-129-178-40.sslip.io`, avec certificats HTTPS automatiques par Caddy. Le déploiement de l'API est conditionné à la variable GitHub `BRAIN_VPS_DEPLOY_ENABLED=true`. N'expose pas directement le port de l'API sur Internet.
 
 ### 4) Relier Pages au VPS
 
 Modifie **uniquement** `config.js` dans le dépôt public :
 
 ```js
-window.BRAIN_CONFIG = { apiBase: 'https://brain-api.ton-domaine.fr' };
+window.BRAIN_CONFIG = { apiBase: 'https://brain-api-57-129-178-40.sslip.io' };
 ```
 
 Recharge le site : un écran de connexion apparaît. Les notes seront cette fois sauvegardées sur le VPS et accessibles depuis tous tes appareils avec le même mot de passe.
@@ -82,7 +82,7 @@ Le volume Docker est **persistant**, mais n'est **pas une sauvegarde**. Fais des
 ## Sécurité et limites de cette V1
 
 - Authentification simple **mono-utilisateur** : mot de passe stocké uniquement dans l'environnement de l'API, jamais sur Pages.
-- Connexions API chiffrées **via HTTPS Nginx**. L'API utilise des jetons HMAC temporaires (12 h), conservés en **sessionStorage** et non transmis à GitHub.
+- Connexions API chiffrées **via HTTPS Caddy**. L'API utilise des jetons HMAC temporaires (12 h), conservés en **sessionStorage** et non transmis à GitHub.
 - Blocage simple des tentatives de connexion : 8 échecs / 15 min / adresse vue par le serveur (après redémarrage le compteur repart à zéro).
 - CORS limité à tes origines autorisées. **CORS ne remplace pas l'authentification.**
 - Le mode local `localStorage` est une démonstration : ce n'est ni un stockage privé robuste, ni une synchronisation. Évite-le sur un poste partagé.
