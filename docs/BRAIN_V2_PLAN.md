@@ -1,6 +1,6 @@
 # Brain V2 — Plan en trois parties
 
-Statut : **parties 1 (fondations) et 2 (refonte responsive) développées sur branche dédiée**. Partie 1 incomplète tant que les illustrations IA définitives ne sont pas intégrées. Publication bloquée jusqu'à validation des deux parties. Aucune migration backend ou base de données.
+Statut : **les fonctionnalités des parties 1, 2 et 3 sont développées sur branche dédiée et disponibles en préversion démo GitHub Pages**. Les illustrations IA définitives de la partie 1 restent à créer ; la publication en version principale attend l'évaluation humaine. Aucune migration backend ou base de données.
 
 ## Partie 1 — Identité visuelle et fondations (13–22 h)
 
@@ -25,10 +25,26 @@ Statut : **parties 1 (fondations) et 2 (refonte responsive) développées sur br
 
 ## Partie 3 — Brain interactif et finalisation (13–24 h)
 
-- [ ] Carte mentale interactive espaces/notes, zoom, navigation, sans IA obligatoire.
-- [ ] Accueil personnalisable : blocs activables, désactivables et réordonnables.
-- [ ] Tests d'accessibilité, mobile, réseau lent, sauvegarde, non-régression et publication.
-- [ ] Documentation des changements et vérification finale.
+- [x] Carte mentale interactive fondée sur les espaces et notes existants : nœuds, ouverture d'une note, navigation vers un espace, déplacement, zoom et recadrage, navigation clavier.
+- [x] Accueil personnalisable : capture rapide, espaces, favoris, statistiques ; activer/masquer et monter/descendre les widgets ; préférence locale et réinitialisation.
+- [x] Tests automatiques de non-régression : création/édition, recherche, filtres, mode jour/nuit, personnalisation, carte mentale, édition PC/mobile, séparation de la préversion.
+- [x] Publication d'une version de test **sans fusionner la PR V2** : https://rambouraxel-del.github.io/Brain/v2-preview/
+- [ ] Validation humaine sur iPhone et PC : clavier, lisibilité, clic/touch, performances, accessibilité et rendu visuel.
+- [ ] Remplacer les illustrations vectorielles provisoires par les 8 paysages IA finaux de la partie 1.
+- [ ] Après retours et dernières corrections : fusion contrôlée de la PR #2 et publication de la version définitive.
+
+### Preview GitHub Pages — fonctionnement
+
+Une [PR #3](https://github.com/rambouraxel-del/Brain/pull/3) limitée au workflow Pages a été fusionnée pour permettre un **dossier de prévisualisation à côté de la V1**, sans fusionner le code V2 dans l'application publique. La [publication GitHub Actions](https://github.com/rambouraxel-del/Brain/actions/runs/40649142432) a réussi et l'archive contient tous les fichiers de la preview. Le backend VPS n'a pas été déployé.
+
+- URL production inchangée : https://rambouraxel-del.github.io/Brain/
+- URL test : https://rambouraxel-del.github.io/Brain/v2-preview/
+- Configuration de préversion : `apiBase: ''`, `preview: true`, donc **aucune connexion à l'API de production**.
+- Notes démo : stockage local sous `brain.v2.preview.notes` et `brain.v2.preview.spaces` ; aucune modification de SQLite.
+- Choix de thème et de widgets en local sur le navigateur.
+- La preview est figée sur un commit V2 testé ; les changements ultérieurs de la branche ne s'y publieront pas automatiquement.
+- En cas de mise en production finale, rétablir les publications normales et supprimer le dossier de preview quand il n'est plus nécessaire. Ne jamais écraser les données VPS.
+
 
 ## Contraintes permanentes
 
