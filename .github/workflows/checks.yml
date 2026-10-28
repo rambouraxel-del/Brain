@@ -64,6 +64,29 @@ jobs:
           mkdir -p _site
           cp index.html styles.css app.js config.js favicon.svg .nojekyll _site/
           test -s _site/index.html
+      - name: Récupérer la version V2 validée pour prévisualisation
+        uses: actions/checkout@v4
+        with:
+          ref: 6ff15d972ab99e0c1c5dc9e1559f04791f7df3b9
+          path: _preview_source
+          persist-credentials: false
+      - name: Publier une préversion isolée sans accès au VPS
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p _site/v2-preview
+          cp _preview_source/index.html _preview_source/styles.css \
+            _preview_source/app.js _preview_source/favicon.svg \
+            _preview_source/visual-themes.css _preview_source/visual-themes.js \
+            _preview_source/v2-layout.css _preview_source/v2-workspace.css \
+            _preview_source/v2-workspace.js _site/v2-preview/
+          # The preview intentionally has no API URL. Demo notes live under
+          # separate localStorage keys and cannot touch production SQLite.
+          printf '%s\n' "window.BRAIN_CONFIG = { apiBase: '', preview: true };" > _site/v2-preview/config.js
+          test -s _site/v2-preview/index.html
+          grep -q "preview: true" _site/v2-preview/config.js
+          ! grep -q "brain-api-" _site/v2-preview/config.js
+
       - name: Configurer GitHub Pages
         uses: actions/configure-pages@v5
       - name: Préparer l'archive Pages
@@ -91,7 +114,6 @@ jobs:
               - 'backend/**'
               - 'tests/test_api.py'
               - 'docker-compose.yml'
-              - '.github/workflows/checks.yml'
               - 'ops/vps-bootstrap/**'
 
   deploy_api:
