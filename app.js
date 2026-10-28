@@ -3,8 +3,10 @@
   const $ = (id) => document.getElementById(id);
   const API_BASE = String(window.BRAIN_CONFIG?.apiBase || '').replace(/\/+$/, '');
   const serverMode = Boolean(API_BASE);
-  const LOCAL_KEY = 'brain.v1.notes';
-  const SPACE_KEY = 'brain.v1.spaces';
+  const previewMode = Boolean(window.BRAIN_CONFIG?.preview);
+  // Preview notes must NEVER share the production/local-demo storage keys.
+  const LOCAL_KEY = previewMode ? 'brain.v2.preview.notes' : 'brain.v1.notes';
+  const SPACE_KEY = previewMode ? 'brain.v2.preview.spaces' : 'brain.v1.spaces';
   const TOKEN_KEY = 'brain.v1.session';
   const DEFAULT_SPACES = [
     { name: 'Inbox', color: '#a4a9b9' },
@@ -214,6 +216,7 @@
     $('activeSearch').hidden = !state.query;
     if (state.query) $('activeSearch').innerHTML = `Résultats pour <strong>« ${encode(state.query)} »</strong><button class="clear-search" type="button" id="clearSearch">Effacer ×</button>`;
     $('clearSearch')?.addEventListener('click', () => {state.query = ''; renderNotes();});
+    document.dispatchEvent(new CustomEvent('brain:updated'));
   }
   function renderSync() {
     const el = $('syncState'); el.classList.toggle('connected',serverMode && !!state.token && state.remoteReady);
@@ -385,10 +388,43 @@
   function setupDate() { const date=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});$('todayChip').textContent=date.charAt(0).toUpperCase()+date.slice(1); }
   async function init() {
     setupDate();setupTheme();bindEvents();setupSearch();render();
+    const badge=$('previewBadge');
+    if(badge && previewMode) {
+      badge.hidden=false;
+      document.body.dataset.preview='true';
+    }
     if(serverMode){
       if(state.token){try{await reloadRemote();}catch(e){if(state.token) showToast(e.message);}}
       else showLogin();
     }
   }
+  // Frontend-only extensions consume this read-only snapshot. No extra API,
+  // database migration or permissions are introduced.
+  window.BrainV2 = Object.freeze({
+    snapshot() {
+      return {
+        notes: serverMode && !state.remoteReady ? [] : state.notes.map(n=>({
+          id:n.id,title:n.title,content:n.content,space:n.space,tags:[...(n.tags||[])],
+          pinned:!!n.pinned,archived:!!n.archived,updated_at:n.updated_at
+        })),
+        spaces: serverMode && !state.remoteReady ? [] : state.spaces.map(space=>({...space})),
+        ready:!serverMode || state.remoteReady
+      };
+    },
+    openNote(id) { if (typeof id==='string') openEditor(id); },
+    filterSpace(name) {
+      if (typeof name!=='string' || !state.spaces.some(space=>space.name===name)) return;
+      setFilter('space:'+name);
+      $('notesGrid').scrollIntoView({behavior:'smooth',block:'start'});
+    },
+    filterPinned() {
+      setFilter('pinned');
+      $('notesGrid').scrollIntoView({behavior:'smooth',block:'start'});
+    },
+    focusCapture() {
+      $('quickCapture').scrollIntoView({behavior:'smooth',block:'center'});
+      $('quickInput').focus();
+    }
+  });
   init();
 })();
