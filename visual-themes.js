@@ -37,6 +37,10 @@
     const select=document.getElementById('visualThemeSelect'),mode=document.getElementById('visualModeSelect');
     if(select)select.value=current.theme;
     if(mode)mode.value=current.mode;
+    // Keep the existing header toggle icon aligned with the explicit V2 setting.
+    const icon=document.getElementById('themeIcon');
+    const iconUse=icon && icon.querySelector('use');
+    if(iconUse)iconUse.setAttribute('href',current.mode==='night'?'#i-sun':'#i-moon');
     const status=document.getElementById('appearancePreview');
     if(status)status.textContent=t.label+' · '+(current.mode==='night'?'Nuit':'Jour');
     try {localStorage.setItem(KEY,JSON.stringify(current));}catch{}
