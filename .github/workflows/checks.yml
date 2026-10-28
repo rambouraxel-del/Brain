@@ -29,6 +29,8 @@ jobs:
         run: |
           node --check app.js
           node --check config.js
+          node --check visual-themes.js
+          node tests/test_frontend_v2.cjs
 
       - name: Vérifier l'image Docker avec l'utilisateur non privilégié
         run: |
