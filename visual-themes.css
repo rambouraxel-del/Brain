@@ -1,0 +1,13 @@
+/* Brain V2 foundations: theme-specific decoration, isolated from API logic. */
+:root{--brain-theme-accent:#487de8;--brain-scene:none}
+body[data-visual-theme] .welcome{position:relative;isolation:isolate;overflow:hidden;border-radius:22px;padding:26px 28px;min-height:174px;background-image:linear-gradient(90deg,rgba(12,22,52,.68),rgba(12,22,52,.12)),var(--brain-scene);background-position:center;background-size:cover}
+body[data-visual-theme] .welcome h1,body[data-visual-theme] .welcome p,body[data-visual-theme] .welcome .eyebrow{color:#fff;text-shadow:0 1px 9px #17253d55}
+body[data-visual-theme] .welcome .date-chip{background:#ffffffd9;color:#27334c}
+body[data-visual-theme] .brand-period{color:var(--brain-theme-accent)}
+body[data-visual-theme] .settings-appearance{display:grid;gap:13px;padding:18px 0;border-bottom:1px solid var(--line)}
+body[data-visual-theme] .appearance-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+body[data-visual-theme] .appearance-controls label{display:grid;gap:6px;font-size:12px;color:var(--muted)}
+body[data-visual-theme] .appearance-controls select{min-width:0;width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text)}
+body[data-visual-theme] .appearance-swatch{height:92px;border-radius:14px;background-image:var(--brain-scene);background-size:cover;background-position:center;display:flex;align-items:end;padding:12px;color:#fff;font-weight:700;text-shadow:0 2px 6px #0009}
+body[data-visual-theme] .appearance-hint{font-size:11px;color:var(--muted);line-height:1.5;margin:0}
+@media(max-width:600px){body[data-visual-theme] .welcome{min-height:132px;padding:19px;border-radius:17px}body[data-visual-theme] .appearance-controls{grid-template-columns:1fr}}
