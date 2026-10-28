@@ -75,6 +75,35 @@ const themes=fs.readFileSync('visual-themes.js','utf8');
   assert.equal(w.document.body.dataset.theme,'dark');
   assert.equal(JSON.parse(w.localStorage.getItem('brain.v2.appearance')).mode,'night');
 
+  // Opening settings alongside a desktop note must not trap document scrolling.
+  $('notesGrid').querySelector('.note-card .note-click').click();
+  $('settingsButton').click();
+  assert.equal(w.document.body.style.overflow,'hidden');
+  $('settingsClose').click();
+  assert.equal(w.document.body.style.overflow,'');
+  $('editorClose').click();
   dom.window.close();
-  console.log('Brain V2 DOM smoke: capture, edit, spaces, search, filters and themes OK');
+
+  // Repeat the editing path with the mobile breakpoint: use a modal, not a
+  // desktop side pane, and unlock scrolling on close.
+  const mobile=new JSDOM(html,{url:'https://example.test/Brain/',runScripts:'outside-only',pretendToBeVisual:true});
+  const m=mobile.window;
+  m.BRAIN_CONFIG={apiBase:''};
+  m.matchMedia=query=>({matches:false,media:query,addListener(){},removeListener(){}});
+  m.scrollTo=()=>{};
+  m.HTMLElement.prototype.scrollIntoView=function(){};
+  m.eval(app);
+  m.eval(themes);
+  m.document.dispatchEvent(new m.Event('DOMContentLoaded',{bubbles:true}));
+  const mobileNote=m.document.querySelector('#notesGrid .note-card .note-click');
+  assert.ok(mobileNote,'Mobile notes should render');
+  mobileNote.click();
+  assert.equal(m.document.getElementById('editorOverlay').hidden,false);
+  assert.equal(m.document.body.classList.contains('editor-side-open'),false);
+  assert.equal(m.document.body.style.overflow,'hidden');
+  m.document.getElementById('editorClose').click();
+  assert.equal(m.document.body.style.overflow,'');
+  mobile.close();
+
+  console.log('Brain V2 DOM smoke: capture, edit (PC/mobile), spaces, search, filters and themes OK');
 })().catch(error=>{console.error(error);process.exitCode=1;});
