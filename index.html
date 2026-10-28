@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="visual-themes.css" />
     <link rel="stylesheet" href="v2-layout.css" />
+    <link rel="stylesheet" href="v2-workspace.css" />
   </head>
   <body>
     <svg aria-hidden="true" class="svg-defs" xmlns="http://www.w3.org/2000/svg">
@@ -59,7 +60,7 @@
       </aside>
 
       <div class="page-shell">
-        <header class="topbar"><div class="mobile-brand"><span class="mini-logo">b.</span><strong>brain.</strong></div><div class="breadcrumbs"><span>Espace personnel</span><svg class="ic"><use href="#i-chevron"/></svg><strong id="breadcrumbLabel">Toutes mes notes</strong></div><div class="top-actions"><button id="searchTrigger" class="search-trigger"><svg class="ic"><use href="#i-search"/></svg><span>Rechercher une idée...</span><kbd>⌘ K</kbd></button><button id="themeButton" class="round-button" title="Changer de thème" aria-label="Changer de thème"><svg class="ic" id="themeIcon"><use href="#i-moon"/></svg></button><div class="profile-dot" title="Espace personnel">A</div></div></header>
+        <header class="topbar"><div class="mobile-brand"><span class="mini-logo">b.</span><strong>brain.</strong></div><div class="breadcrumbs"><span>Espace personnel</span><svg class="ic"><use href="#i-chevron"/></svg><strong id="breadcrumbLabel">Toutes mes notes</strong></div><div class="top-actions"><span id="previewBadge" class="preview-badge" hidden>PRÉVERSION · DÉMO</span><button id="searchTrigger" class="search-trigger"><svg class="ic"><use href="#i-search"/></svg><span>Rechercher une idée...</span><kbd>⌘ K</kbd></button><button id="themeButton" class="round-button" title="Changer de thème" aria-label="Changer de thème"><svg class="ic" id="themeIcon"><use href="#i-moon"/></svg></button><div class="profile-dot" title="Espace personnel">A</div></div></header>
         <main class="content" id="content">
           <section class="welcome" aria-label="Accueil Brain">
             <div class="welcome-content">
@@ -73,7 +74,34 @@
             </div>
             <div class="date-chip" id="todayChip"></div>
           </section>
-          <section class="capture" id="quickCapture" aria-labelledby="captureTitle"><div class="capture-head"><div class="capture-icon"><svg class="ic"><use href="#i-sparkle"/></svg></div><div><h2 id="captureTitle">Capture rapide</h2><p>Une idée en tête ? Note-la avant qu’elle ne s’envole.</p></div><span class="capture-shortcut">⌘ / CTRL + ENTRÉE</span></div><label class="sr-only" for="quickInput">Écrire une idée</label><textarea id="quickInput" rows="3" placeholder="Note une idée, une réflexion, quelque chose à ne pas oublier..."></textarea><div class="capture-foot"><div class="capture-meta"><label class="select-wrap"><svg class="ic"><use href="#i-book"/></svg><select id="quickSpace" aria-label="Choisir un espace"></select></label><label class="tags-wrap"><span>#</span><input type="text" id="quickTags" maxlength="150" placeholder="Tags (facultatif)" aria-label="Tags séparés par une virgule"/></label></div><button type="button" class="primary-button" id="captureButton"><svg class="ic"><use href="#i-plus"/></svg> Enregistrer l’idée</button></div></section>
+          <section class="workspace-controls" aria-label="Outils du tableau de bord">
+              <div class="workspace-controls-title"><span class="section-overline">TON ESPACE, À TA FAÇON</span><h2>Tableau de bord</h2></div>
+              <div class="workspace-controls-actions">
+                <button type="button" id="dashboardCustomize" class="workspace-button"><svg class="ic"><use href="#i-settings"/></svg><span>Personnaliser</span></button>
+                <button type="button" id="dashboardMindmap" class="workspace-button workspace-map-button"><svg class="ic"><use href="#i-sparkle"/></svg><span>Carte mentale</span></button>
+              </div>
+            </section>
+            <div id="homeWidgets" class="home-widgets">
+              <section class="pinned-widget" id="pinnedWidget" hidden aria-labelledby="pinnedWidgetTitle">
+                <div class="showcase-heading"><div><span class="section-overline">POUR NE RIEN OUBLIER</span><h2 id="pinnedWidgetTitle">À garder près de soi</h2></div><button type="button" class="showcase-link" id="pinnedAllButton">Tous les favoris <svg class="ic"><use href="#i-arrow"/></svg></button></div>
+                <div id="pinnedWidgetList" class="pinned-widget-list"></div>
+              </section>
+            </div>
+            <section id="mindmapSection" class="mindmap-section" aria-labelledby="mindmapHeading" hidden>
+              <div class="mindmap-intro"><div><span class="section-overline">TOUTES TES IDÉES EN UN REGARD</span><h2 id="mindmapHeading">Carte mentale</h2><p>Sélectionne une bulle pour ouvrir une note ou explorer un espace. Déplace la carte et ajuste le zoom.</p></div><button type="button" id="mindmapBack" class="workspace-button">Retour aux notes</button></div>
+              <div class="mindmap-frame">
+                <div class="mindmap-tools" role="group" aria-label="Zoom de la carte mentale">
+                  <button type="button" id="mindmapZoomIn" aria-label="Agrandir la carte">+</button>
+                  <button type="button" id="mindmapZoomOut" aria-label="Réduire la carte">−</button>
+                  <button type="button" id="mindmapReset" aria-label="Recentrer la carte">◎</button>
+                </div>
+                <svg id="mindmapSvg" class="mindmap-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1020" role="group" aria-label="Carte des espaces et notes Brain">
+                  <g id="mindmapPanzoom"></g>
+                </svg>
+              </div>
+              <p class="mindmap-footnote" id="mindmapFootnote">Les notes archivées ne sont pas représentées.</p>
+            </section>
+            <section class="capture" id="quickCapture" aria-labelledby="captureTitle"><div class="capture-head"><div class="capture-icon"><svg class="ic"><use href="#i-sparkle"/></svg></div><div><h2 id="captureTitle">Capture rapide</h2><p>Une idée en tête ? Note-la avant qu’elle ne s’envole.</p></div><span class="capture-shortcut">⌘ / CTRL + ENTRÉE</span></div><label class="sr-only" for="quickInput">Écrire une idée</label><textarea id="quickInput" rows="3" placeholder="Note une idée, une réflexion, quelque chose à ne pas oublier..."></textarea><div class="capture-foot"><div class="capture-meta"><label class="select-wrap"><svg class="ic"><use href="#i-book"/></svg><select id="quickSpace" aria-label="Choisir un espace"></select></label><label class="tags-wrap"><span>#</span><input type="text" id="quickTags" maxlength="150" placeholder="Tags (facultatif)" aria-label="Tags séparés par une virgule"/></label></div><button type="button" class="primary-button" id="captureButton"><svg class="ic"><use href="#i-plus"/></svg> Enregistrer l’idée</button></div></section>
           <section class="spaces-showcase" id="spacesShowcase" aria-labelledby="spacesShowcaseTitle">
             <div class="showcase-heading"><div><span class="section-overline">EXPLORE TON UNIVERS</span><h2 id="spacesShowcaseTitle">Mes espaces</h2></div><button type="button" id="spacesAllButton" class="showcase-link">Parcourir les espaces <svg class="ic"><use href="#i-arrow"/></svg></button></div>
             <div id="spacesGallery" class="spaces-gallery" aria-live="polite"></div>
@@ -99,6 +127,17 @@
       <button type="button" id="mobileSettings"><svg class="ic"><use href="#i-settings"/></svg><span>Réglages</span></button>
     </nav>
 
+    <div class="modal-overlay" id="dashboardConfigOverlay" hidden>
+      <div class="dialog dashboard-config-dialog" role="dialog" aria-modal="true" aria-labelledby="dashboardConfigHeading">
+        <div class="dialog-top"><div class="dialog-title"><span class="dialog-kicker">TON ACCUEIL</span><h2 id="dashboardConfigHeading">Personnaliser l'accueil</h2></div><button type="button" class="icon-button" id="dashboardConfigClose" aria-label="Fermer la personnalisation"><svg class="ic"><use href="#i-close"/></svg></button></div>
+        <div class="dashboard-config-body">
+          <p>Choisis les blocs visibles et change leur ordre. Tes réglages restent sur cet appareil. La liste complète des notes reste toujours accessible.</p>
+          <div id="dashboardConfigList" class="dashboard-config-list"></div>
+          <button type="button" id="dashboardConfigReset" class="secondary-button">Réinitialiser l'accueil</button>
+        </div>
+      </div>
+    </div>
+
     <div class="modal-overlay" id="mobileSpacesOverlay" hidden>
       <div class="dialog mobile-spaces-dialog" role="dialog" aria-modal="true" aria-labelledby="mobileSpacesTitle">
         <div class="dialog-top"><div class="dialog-title"><span class="dialog-kicker">EXPLORER</span><h2 id="mobileSpacesTitle">Mes espaces</h2></div><button type="button" class="icon-button" id="mobileSpacesClose" aria-label="Fermer les espaces"><svg class="ic"><use href="#i-close"/></svg></button></div>
@@ -114,5 +153,6 @@
     <script src="config.js"></script>
     <script defer src="app.js"></script>
     <script defer src="visual-themes.js"></script>
+    <script defer src="v2-workspace.js"></script>
   </body>
 </html>
