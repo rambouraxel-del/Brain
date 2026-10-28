@@ -30,6 +30,7 @@ jobs:
           node --check app.js
           node --check config.js
           node --check visual-themes.js
+          node --check v2-workspace.js
           node tests/test_frontend_v2.cjs
       - name: Test de parcours frontend (DOM simulé)
         run: |
