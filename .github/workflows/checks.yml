@@ -29,6 +29,13 @@ jobs:
         run: |
           node --check app.js
           node --check config.js
+          node --check visual-themes.js
+          node --check v2-workspace.js
+          node tests/test_frontend_v2.cjs
+      - name: Test de parcours frontend (DOM simulé)
+        run: |
+          npm install --no-save --ignore-scripts jsdom@26.1.0
+          node tests/test_frontend_runtime.cjs
 
       - name: Vérifier l'image Docker avec l'utilisateur non privilégié
         run: |
@@ -62,8 +69,12 @@ jobs:
       - name: Préparer uniquement les fichiers publics
         run: |
           mkdir -p _site
-          cp index.html styles.css app.js config.js favicon.svg .nojekyll _site/
+          cp index.html styles.css app.js config.js favicon.svg .nojekyll \
+            visual-themes.css visual-themes.js v2-layout.css \
+            v2-workspace.css v2-workspace.js _site/
           test -s _site/index.html
+          test -s _site/v2-workspace.js
+          test -s _site/visual-themes.css
       - name: Récupérer la version V2 validée pour prévisualisation
         uses: actions/checkout@v4
         with:

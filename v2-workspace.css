@@ -1,0 +1,224 @@
+/* Brain V2 — Phase 3: configurable dashboard, pinned ideas, mind map.
+ * All visual features use the existing notes and spaces, no API changes.
+ */
+body[data-visual-theme] .workspace-controls{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  margin:30px 0 15px;scroll-margin-top:95px;
+}
+body[data-visual-theme] .workspace-controls h2{
+  margin:5px 0 0;font-size:23px;letter-spacing:-.7px;color:var(--text);
+}
+body[data-visual-theme] .workspace-controls-actions{display:flex;align-items:center;gap:9px}
+body[data-visual-theme] .workspace-button{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:39px;border:1px solid var(--line);border-radius:12px;
+  background:var(--surface);color:var(--text);font-size:12px;font-weight:750;
+  padding:9px 14px;box-shadow:0 2px 8px #0c1f3807;
+}
+body[data-visual-theme] .workspace-button:hover{border-color:var(--accent);color:var(--accent)}
+body[data-visual-theme] .workspace-button .ic{width:16px;height:16px}
+body[data-visual-theme] .workspace-map-button{
+  background:var(--v2-soft);border-color:var(--v2-outline);color:var(--accent);
+}
+body[data-visual-theme] .workspace-map-button.active{
+  background:var(--accent);color:white;border-color:var(--accent);
+}
+body[data-visual-theme] .home-widgets{display:flex;flex-direction:column;gap:23px}
+body[data-visual-theme] .home-widgets .capture,
+body[data-visual-theme] .home-widgets .spaces-showcase,
+body[data-visual-theme] .home-widgets .overview,
+body[data-visual-theme] .home-widgets .pinned-widget{
+  margin:0;
+}
+body[data-visual-theme] .home-widgets .overview{display:grid}
+body[data-visual-theme] .pinned-widget{scroll-margin-top:90px}
+body[data-visual-theme] .pinned-widget-list{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;
+}
+body[data-visual-theme] .pinned-mini-card{
+  min-height:128px;min-width:0;display:flex;flex-direction:column;align-items:flex-start;
+  text-align:left;border:1px solid var(--line);border-radius:17px;gap:9px;
+  background:var(--surface);padding:17px;box-shadow:var(--v2-shade);color:var(--text);
+}
+body[data-visual-theme] .pinned-mini-card:hover{border-color:var(--accent)}
+body[data-visual-theme] .pinned-mini-card small{
+  font-weight:780;color:var(--accent);font-size:10px;
+}
+body[data-visual-theme] .pinned-mini-card strong{
+  max-width:100%;font-size:13px;overflow:hidden;text-overflow:ellipsis;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+body[data-visual-theme] .pinned-mini-card span{
+  font-size:11px;color:var(--muted);line-height:1.5;
+  max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+}
+body[data-visual-theme] .pinned-widget-empty{
+  padding:20px;border:1px dashed var(--line);border-radius:14px;
+  color:var(--muted);font-size:12px;margin:0;
+}
+body[data-visual-theme] .notes-section{margin-top:30px}
+body[data-visual-theme] .dashboard-config-dialog{
+  width:min(600px,100%);display:flex;flex-direction:column;
+}
+body[data-visual-theme] .dashboard-config-body{
+  display:flex;flex-direction:column;gap:15px;padding:22px 26px;overflow-y:auto;
+}
+body[data-visual-theme] .dashboard-config-body>p{
+  font-size:12px;line-height:1.65;color:var(--muted);margin:0 0 3px;
+}
+body[data-visual-theme] .dashboard-config-list{display:grid;gap:10px}
+body[data-visual-theme] .dashboard-widget-choice{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  border:1px solid var(--line);border-radius:14px;padding:12px;
+  background:var(--surface-2);
+}
+body[data-visual-theme] .dashboard-widget-label{
+  display:flex;align-items:center;gap:12px;cursor:pointer;flex:1;min-width:0;
+}
+body[data-visual-theme] .dashboard-widget-label input{
+  width:18px;height:18px;accent-color:var(--accent);flex:none;
+}
+body[data-visual-theme] .dashboard-widget-copy{min-width:0;display:grid;gap:4px}
+body[data-visual-theme] .dashboard-widget-copy strong{font-size:12px}
+body[data-visual-theme] .dashboard-widget-copy small{
+  font-size:10px;color:var(--muted);line-height:1.4;
+}
+body[data-visual-theme] .dashboard-widget-actions{display:flex;gap:5px;flex:none}
+body[data-visual-theme] .dashboard-widget-actions button{
+  width:33px;height:34px;border:1px solid var(--line);border-radius:9px;
+  color:var(--text);background:var(--surface);font-size:16px;font-weight:700;
+}
+body[data-visual-theme] .dashboard-widget-actions button:disabled{opacity:.27}
+body[data-visual-theme] .dashboard-config-body>.secondary-button{
+  align-self:flex-start;margin-top:3px;
+}
+body[data-visual-theme] .mindmap-section{
+  scroll-margin-top:95px;animation:mindmap-enter .25s ease-out;
+}
+@keyframes mindmap-enter{
+  from{opacity:0;transform:translateY(7px)}
+  to{opacity:1;transform:translateY(0)}
+}
+body[data-visual-theme] .mindmap-intro{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:20px;margin:8px 0 19px;
+}
+body[data-visual-theme] .mindmap-intro h2{
+  font-size:clamp(26px,3vw,36px);letter-spacing:-1px;margin:8px 0;
+}
+body[data-visual-theme] .mindmap-intro p{
+  color:var(--muted);font-size:12px;line-height:1.6;margin:0;max-width:570px;
+}
+body[data-visual-theme] .mindmap-frame{
+  position:relative;border:1px solid var(--line);border-radius:22px;
+  overflow:hidden;background:
+    radial-gradient(ellipse at 40% 40%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 60%),
+    var(--surface-2);
+  min-height:550px;
+}
+body[data-visual-theme] .mindmap-frame::before{
+  content:'';position:absolute;inset:0;opacity:.11;pointer-events:none;
+  background-image:var(--brain-scene);background-size:cover;background-position:center;
+}
+body[data-visual-theme] .mindmap-svg{
+  display:block;width:100%;height:550px;touch-action:none;
+  cursor:grab;position:relative;z-index:1;
+}
+body[data-visual-theme] .mindmap-svg.dragging{cursor:grabbing}
+body[data-visual-theme] .mindmap-tools{
+  position:absolute;z-index:2;top:16px;right:16px;
+  display:flex;gap:6px;align-items:center;
+  padding:5px;border-radius:14px;background:var(--surface);border:1px solid var(--line);
+  box-shadow:0 6px 20px #202d3e1a;
+}
+body[data-visual-theme] .mindmap-tools button{
+  border:0;background:var(--surface-2);color:var(--text);
+  font-size:20px;font-weight:650;border-radius:9px;min-width:35px;height:35px;
+}
+body[data-visual-theme] .mindmap-tools button:hover{background:var(--v2-soft);color:var(--accent)}
+body[data-visual-theme] .mindmap-line{
+  fill:none;stroke:var(--accent);stroke-width:3.5;opacity:.3;
+  stroke-linecap:round;
+}
+body[data-visual-theme] .mindmap-note-edge{stroke-width:2.3;opacity:.16}
+body[data-visual-theme] .mindmap-node{
+  cursor:pointer;filter:drop-shadow(0 8px 12px #1a355626);
+  transition:filter .15s;outline:0;
+}
+body[data-visual-theme] .mindmap-node:hover,
+body[data-visual-theme] .mindmap-node:focus-visible{
+  filter:drop-shadow(0 8px 16px #406cb877);
+}
+body[data-visual-theme] .mindmap-node rect{stroke:#ffffff7c;stroke-width:2}
+body[data-visual-theme] .mindmap-node:focus-visible rect{stroke:#ffce54;stroke-width:5}
+body[data-visual-theme] .mindmap-label{
+  font-family:Inter,ui-sans-serif,-apple-system,sans-serif;
+  fill:white;font-weight:800;font-size:24px;pointer-events:none;
+}
+body[data-visual-theme] .mindmap-sub{
+  fill:#ffffffdf;font-size:16px;pointer-events:none;
+}
+body[data-visual-theme] .mindmap-root .mindmap-label{font-size:29px}
+body[data-visual-theme] .mindmap-note .mindmap-label,
+body[data-visual-theme] .mindmap-overflow .mindmap-label{
+  fill:#2a3554;font-size:19px;
+}
+body[data-visual-theme] .mindmap-note .mindmap-sub,
+body[data-visual-theme] .mindmap-overflow .mindmap-sub{
+  fill:#66718c;font-size:15px;
+}
+body[data-visual-theme] .mindmap-note rect{
+  stroke:#dfe6f2;stroke-width:2;
+}
+body[data-visual-theme] .mindmap-overflow rect{stroke:#9db9e6}
+body[data-visual-theme] .mindmap-footnote{
+  font-size:11px;color:var(--muted);line-height:1.5;margin:13px 2px;
+}
+body[data-visual-theme][data-theme="dark"] .dashboard-widget-choice{
+  background:var(--surface-2);
+}
+body[data-visual-theme][data-theme="dark"] .mindmap-frame{
+  background:radial-gradient(ellipse at 50% 50%,#1a2851,#13192c 80%);
+}
+body[data-visual-theme][data-preview="true"] .preview-badge{
+  background:#fff4d4;color:#855b24;border-radius:20px;padding:6px 10px;
+  font-size:10px;font-weight:800;letter-spacing:.4px;white-space:nowrap;
+}
+@media(max-width:860px){
+  body[data-visual-theme] .workspace-controls{margin:20px 0 13px}
+  body[data-visual-theme] .workspace-controls h2{font-size:20px}
+  body[data-visual-theme] .pinned-widget-list{
+    display:flex;overflow-x:auto;scroll-snap-type:x mandatory;
+    scrollbar-width:none;gap:10px;margin-inline:-18px;padding:0 18px 6px;
+  }
+  body[data-visual-theme] .pinned-mini-card{
+    flex:0 0 min(245px,75vw);scroll-snap-align:start;
+  }
+  body[data-visual-theme] .mindmap-frame{min-height:510px}
+  body[data-visual-theme] .mindmap-svg{height:510px}
+  body[data-visual-theme] .preview-badge{display:none}
+}
+@media(max-width:600px){
+  body[data-visual-theme] .workspace-controls{flex-wrap:wrap;gap:10px}
+  body[data-visual-theme] .workspace-controls-title{width:100%}
+  body[data-visual-theme] .workspace-controls h2{font-size:20px}
+  body[data-visual-theme] .workspace-controls-actions{width:100%}
+  body[data-visual-theme] .workspace-controls-actions .workspace-button{
+    flex:1;font-size:11px;min-height:37px;padding:8px 10px;
+  }
+  body[data-visual-theme] .home-widgets{gap:20px}
+  body[data-visual-theme] .home-widgets .overview{gap:7px}
+  body[data-visual-theme] .dashboard-config-body{padding:16px}
+  body[data-visual-theme] .dashboard-widget-choice{padding:11px 9px}
+  body[data-visual-theme] .dashboard-widget-actions button{width:29px;height:31px}
+  body[data-visual-theme] .mindmap-intro{flex-direction:column;gap:12px}
+  body[data-visual-theme] .mindmap-intro h2{font-size:26px}
+  body[data-visual-theme] .mindmap-frame{border-radius:16px}
+  body[data-visual-theme] .mindmap-frame,
+  body[data-visual-theme] .mindmap-svg{min-height:65dvh;height:65dvh}
+  body[data-visual-theme] .mindmap-tools{top:10px;right:10px}
+}
+@media(prefers-reduced-motion:reduce){
+  body[data-visual-theme] .mindmap-section{animation:none}
+  body[data-visual-theme] .mindmap-node{transition:none}
+}

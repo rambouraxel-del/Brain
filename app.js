@@ -3,8 +3,10 @@
   const $ = (id) => document.getElementById(id);
   const API_BASE = String(window.BRAIN_CONFIG?.apiBase || '').replace(/\/+$/, '');
   const serverMode = Boolean(API_BASE);
-  const LOCAL_KEY = 'brain.v1.notes';
-  const SPACE_KEY = 'brain.v1.spaces';
+  const previewMode = Boolean(window.BRAIN_CONFIG?.preview);
+  // Preview notes must NEVER share the production/local-demo storage keys.
+  const LOCAL_KEY = previewMode ? 'brain.v2.preview.notes' : 'brain.v1.notes';
+  const SPACE_KEY = previewMode ? 'brain.v2.preview.spaces' : 'brain.v1.spaces';
   const TOKEN_KEY = 'brain.v1.session';
   const DEFAULT_SPACES = [
     { name: 'Inbox', color: '#a4a9b9' },
@@ -40,8 +42,26 @@
   function tagsFrom(input) { return [...new Set(input.split(',').map(x => x.trim().replace(/^#/, '').slice(0, 35)).filter(Boolean))].slice(0, 12); }
   function findSpace(name) { return state.spaces.find(s => s.name === name) || {name, color:'#9da4b9'}; }
   function showToast(text) { const el = $('toast'); el.textContent = text; el.classList.add('show'); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => el.classList.remove('show'), 3100); }
-  function showModal(id) { $(id).hidden = false; document.body.style.overflow = 'hidden'; }
-  function closeModal(id) { $(id).hidden = true; if (![...document.querySelectorAll('.modal-overlay')].some(el => !el.hidden)) document.body.style.overflow = ''; }
+  function sideEditorEnabled() { return window.matchMedia('(min-width: 1180px)').matches; }
+  function showModal(id) {
+    $(id).hidden = false;
+    if (id === 'editorOverlay' && sideEditorEnabled()) {
+      document.body.classList.add('editor-side-open');
+      $('editorOverlay').querySelector('.editor-dialog').setAttribute('aria-modal','false');
+    } else {
+      document.body.style.overflow = 'hidden';
+      if (id === 'editorOverlay') $('editorOverlay').querySelector('.editor-dialog').setAttribute('aria-modal','true');
+    }
+  }
+  function closeModal(id) {
+    $(id).hidden = true;
+    if (id === 'editorOverlay') document.body.classList.remove('editor-side-open');
+    // A desktop side editor isn't a blocking modal. Closing settings should
+    // restore scrolling even when the note pane remains open.
+    const blocking=[...document.querySelectorAll('.modal-overlay')].some(el =>
+      !el.hidden && !(el.id === 'editorOverlay' && sideEditorEnabled()));
+    document.body.style.overflow = blocking ? 'hidden' : '';
+  }
   function showLogin(message = '') { $('loginError').textContent = message; showModal('loginOverlay'); setTimeout(() => $('passwordInput').focus(), 80); }
   function endSession() {
     state.token = '';
@@ -89,13 +109,56 @@
     const space = { name, color:colors[(state.spaces.length - 1) % colors.length] };
     state.spaces.push(space); saveLocal(); return space;
   }
-  function render() { renderNav(); renderSpaceSelects(); renderStats(); renderNotes(); renderSync(); }
+  function render() { renderNav(); renderSpaceSelects(); renderStats(); renderSpaceCards(); renderNotes(); renderSync(); }
+  function renderSpaceCards() {
+    const gallery=$('spacesGallery'), mobileList=$('mobileSpacesList');
+    if (!gallery || !mobileList) return;
+    gallery.replaceChildren(); mobileList.replaceChildren();
+    const spaces=state.spaces.filter(space=>space.name!=='Inbox');
+    const active=state.notes.filter(n=>!n.archived);
+    const createSpaceButton=(space, index, compact=false)=>{
+      const count=active.filter(n=>n.space===space.name).length;
+      const button=document.createElement('button');
+      button.type='button';
+      button.className=compact?'mobile-space-entry':'space-art-card';
+      button.dataset.spaceIndex=String(index%6);
+      button.setAttribute('aria-label',space.name+', '+count+' notes');
+      const title=document.createElement('strong');title.textContent=space.name;
+      const meta=document.createElement('small');meta.textContent=count+' note'+(count!==1?'s':'');
+      if(compact) {
+        const dot=document.createElement('span');dot.className='space-dot';
+        dot.style.background=/^#[0-9a-f]{6}$/i.test(space.color)?space.color:'#6b82a4';
+        button.append(dot,title,meta);
+      } else {
+        const visual=document.createElement('span');visual.className='space-art';
+        const content=document.createElement('span');content.className='space-art-copy';content.append(title,meta);
+        button.append(visual,content);
+      }
+      button.addEventListener('click',()=>{
+        closeModal('mobileSpacesOverlay');
+        setFilter('space:'+space.name);
+        $('notesGrid').scrollIntoView({behavior:'smooth',block:'start'});
+      });
+      return button;
+    };
+    spaces.slice(0,6).forEach((space,i)=>gallery.append(createSpaceButton(space,i)));
+    spaces.forEach((space,i)=>mobileList.append(createSpaceButton(space,i,true)));
+    if (!spaces.length) {
+      const empty=document.createElement('p');empty.className='spaces-empty';empty.textContent='Crée ton premier espace pour organiser tes idées.';
+      gallery.append(empty);
+    }
+  }
   function renderNav() {
     const nonArchived = state.notes.filter(n => !n.archived);
     $('navCountAll').textContent = nonArchived.length;
     $('navCountInbox').textContent = nonArchived.filter(n => n.space === 'Inbox').length;
     document.querySelectorAll('[data-filter]').forEach(el => el.classList.toggle('active', el.dataset.filter === state.filter));
     document.querySelectorAll('[data-mobile-filter]').forEach(el => el.classList.toggle('active', el.dataset.mobileFilter === state.filter));
+    document.querySelectorAll('[data-quick-filter]').forEach(el => {
+      const active=el.dataset.quickFilter === state.filter;
+      el.classList.toggle('active',active);
+      el.setAttribute('aria-pressed',String(active));
+    });
     const spaceNav = $('spaceNav'); spaceNav.replaceChildren();
     for (const space of state.spaces.filter(s => s.name !== 'Inbox')) {
       const btn = document.createElement('button');btn.type = 'button'; btn.className = 'nav-item' + (state.filter === `space:${space.name}` ? ' active' : '');
@@ -140,18 +203,20 @@
     const label = state.filter.startsWith('space:') ? state.filter.slice(6) : labels[state.filter] || 'Toutes mes notes';
     $('breadcrumbLabel').textContent = label; $('listTitle').firstChild.nodeValue = `${label} `;
     const notes = filteredNotes(); $('resultCount').textContent = notes.length;
-    $('listOverline').textContent = state.filter === 'archived' ? 'IDÉES CONSERVÉES' : 'TA BIBLIOTHÈQUE';
+    $('listOverline').textContent = state.filter.startsWith('space:') ? 'NOTES DE TON ESPACE' : 'TA BIBLIOTHÈQUE';
+    $('listOverline').textContent = state.filter === 'archived' ? 'IDÉES CONSERVÉES' : state.filter.startsWith('space:') ? 'NOTES DE TON ESPACE' : 'TA BIBLIOTHÈQUE';
     $('notesGrid').classList.toggle('list-mode',state.view === 'list');
     $('gridButton').classList.toggle('selected',state.view === 'grid');$('listButton').classList.toggle('selected',state.view === 'list');
     const grid = $('notesGrid'); grid.innerHTML = notes.map(n => {
       const space = findSpace(n.space);
-      return `<article class="note-card" data-note-id="${encode(n.id)}"><div class="note-top"><span class="note-space"><span class="space-dot" style="background:${encode(space.color)}"></span>${encode(n.space === 'Inbox' ? 'Boîte de réception' : n.space)}</span><span class="note-options"><button type="button" class="note-icon-button ${n.pinned ? 'active':''}" data-action="pin" aria-label="${n.pinned ? 'Désépingler' : 'Épingler'}" title="${n.pinned ? 'Désépingler' : 'Épingler'}"><svg class="ic"><use href="#i-pin"/></svg></button><button type="button" class="note-icon-button" data-action="edit" aria-label="Modifier" title="Modifier"><svg class="ic"><use href="#i-dots"/></svg></button></span></div><button type="button" class="note-click" data-action="edit"><h3 class="note-title">${encode(n.title || titleFrom(n.content || ''))}</h3><p class="note-preview">${encode(n.content || '')}</p></button><div class="note-footer"><div class="note-tags">${(n.tags||[]).slice(0,3).map(t=>`<span class="tag">#${encode(t)}</span>`).join('')}</div><span class="note-date">${dateLabel(n.updated_at)}</span></div></article>`;
+      return `<article class="note-card ${state.editId === n.id && !$('editorOverlay').hidden ? 'is-selected' : ''}" data-note-id="${encode(n.id)}"><div class="note-top"><span class="note-space"><span class="space-dot" style="background:${encode(space.color)}"></span>${encode(n.space === 'Inbox' ? 'Boîte de réception' : n.space)}</span><span class="note-options"><button type="button" class="note-icon-button ${n.pinned ? 'active':''}" data-action="pin" aria-label="${n.pinned ? 'Désépingler' : 'Épingler'}" title="${n.pinned ? 'Désépingler' : 'Épingler'}"><svg class="ic"><use href="#i-pin"/></svg></button><button type="button" class="note-icon-button" data-action="edit" aria-label="Modifier" title="Modifier"><svg class="ic"><use href="#i-dots"/></svg></button></span></div><button type="button" class="note-click" data-action="edit"><h3 class="note-title">${encode(n.title || titleFrom(n.content || ''))}</h3><p class="note-preview">${encode(n.content || '')}</p></button><div class="note-footer"><div class="note-tags">${(n.tags||[]).slice(0,3).map(t=>`<span class="tag">#${encode(t)}</span>`).join('')}</div><span class="note-date">${dateLabel(n.updated_at)}</span></div></article>`;
     }).join('');
     const empty = notes.length === 0; $('emptyState').hidden = !empty;
     if (empty) { $('emptyTitle').textContent = state.query ? 'Aucun résultat.' : state.filter === 'archived' ? 'Aucune note archivée.' : 'Ici commence la prochaine idée.'; $('emptyText').textContent = state.query ? 'Essaie un autre mot-clé ou efface la recherche.' : 'Capture une pensée quand elle arrive. Tu pourras la retrouver ici.'; }
     $('activeSearch').hidden = !state.query;
     if (state.query) $('activeSearch').innerHTML = `Résultats pour <strong>« ${encode(state.query)} »</strong><button class="clear-search" type="button" id="clearSearch">Effacer ×</button>`;
     $('clearSearch')?.addEventListener('click', () => {state.query = ''; renderNotes();});
+    document.dispatchEvent(new CustomEvent('brain:updated'));
   }
   function renderSync() {
     const el = $('syncState'); el.classList.toggle('connected',serverMode && !!state.token && state.remoteReady);
@@ -162,7 +227,11 @@
     $('legacyImportBlock').hidden = !(serverMode && state.token && state.remoteReady && Array.isArray(legacy) && legacy.length > 0);
     if (!$('legacyImportBlock').hidden) $('legacyCount').textContent = legacy.length;
   }
-  function setFilter(filter) { state.filter = filter; render(); window.scrollTo({top:0,behavior:'smooth'}); }
+  function setFilter(filter) {
+    state.filter = filter;
+    render();
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
   async function handleCapture() {
     if (state.busy) return;
     const content = $('quickInput').value.trim(); if (!content) return showToast('Écris au moins une idée avant de sauvegarder.');
@@ -175,7 +244,7 @@
     const note = state.notes.find(n => n.id === id); if (!note) return;
     state.editId = id; state.editPinned = !!note.pinned; state.editArchived = !!note.archived;
     $('editTitle').value = note.title; $('editContent').value = note.content;
-    $('editSpace').value = note.space; $('editTags').value = (note.tags||[]).join(', '); updateEditButtons(); showModal('editorOverlay');
+    $('editSpace').value = note.space; $('editTags').value = (note.tags||[]).join(', '); updateEditButtons(); showModal('editorOverlay'); renderNotes();
   }
   function updateEditButtons() {
     $('editPin').classList.toggle('active',state.editPinned); $('editPin').querySelector('span').textContent = state.editPinned ? 'Épinglée' : 'Épingler';
@@ -272,16 +341,36 @@
   }
   function bindEvents() {
     $('captureButton').addEventListener('click',handleCapture);
+    const focusCapture=()=>{
+      if (!$('editorOverlay').hidden) closeModal('editorOverlay');
+      $('quickCapture').scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(()=>$('quickInput').focus(),120);
+    };
+    $('quickNewNote').addEventListener('click',focusCapture);
+    $('heroNewNote').addEventListener('click',focusCapture);
+    $('heroExploreSpaces').addEventListener('click',()=>$('spacesShowcase').scrollIntoView({behavior:'smooth',block:'start'}));
+    $('spacesAllButton').addEventListener('click',()=>{
+      if (window.matchMedia('(max-width: 860px)').matches) showModal('mobileSpacesOverlay');
+      else $('spaceNav').scrollIntoView({behavior:'smooth',block:'nearest'});
+    });
+    document.querySelectorAll('[data-quick-filter]').forEach(btn=>btn.addEventListener('click',()=>{
+      setFilter(btn.dataset.quickFilter);
+      $('notesGrid').scrollIntoView({behavior:'smooth',block:'start'});
+    }));
     $('quickInput').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();handleCapture();}});
     $('mainNav').addEventListener('click',e=>{const btn=e.target.closest('[data-filter]');if(btn)setFilter(btn.dataset.filter);});
     document.querySelectorAll('[data-mobile-filter]').forEach(btn=>btn.addEventListener('click',()=>setFilter(btn.dataset.mobileFilter)));
-    $('mobileCapture').addEventListener('click',()=>{$('quickInput').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>$('quickInput').focus(),280);});
+    $('mobileCapture').addEventListener('click',focusCapture);
+    $('mobileSpaces').addEventListener('click',()=>showModal('mobileSpacesOverlay'));
+    $('mobileSpacesClose').addEventListener('click',()=>closeModal('mobileSpacesOverlay'));
+    $('mobileCreateSpace').addEventListener('click',()=>{closeModal('mobileSpacesOverlay');showModal('spaceOverlay');$('spaceName').focus();});
+    $('mobileSearch').addEventListener('click',()=>$('searchTrigger').click());
     $('mobileSettings').addEventListener('click',()=>showModal('settingsOverlay'));
     $('emptyNewButton').addEventListener('click',()=>{$('quickInput').scrollIntoView({behavior:'smooth',block:'center'});$('quickInput').focus();});
     $('notesGrid').addEventListener('click',e=>{const button=e.target.closest('[data-action]'),card=e.target.closest('[data-note-id]');if(!button||!card)return;if(button.dataset.action==='pin')togglePin(card.dataset.noteId);else openEditor(card.dataset.noteId);});
     $('sortSelect').addEventListener('change',e=>{state.sort=e.target.value;renderNotes();});
     for(const view of ['grid','list'])$(view+'Button').addEventListener('click',()=>{state.view=view;localStorage.setItem('brain.v1.view',view);renderNotes();});
-    $('editorClose').addEventListener('click',()=>closeModal('editorOverlay'));
+    $('editorClose').addEventListener('click',()=>{closeModal('editorOverlay');renderNotes();});
     $('saveEdit').addEventListener('click',saveEditor);$('editDelete').addEventListener('click',deleteEditor);
     $('editPin').addEventListener('click',()=>{state.editPinned=!state.editPinned;updateEditButtons();});
     $('editArchive').addEventListener('click',()=>{state.editArchived=!state.editArchived;updateEditButtons();});
@@ -293,16 +382,49 @@
     $('exportButton').addEventListener('click',exportData);$('importButton').addEventListener('click',()=>$('importFile').click());$('importFile').addEventListener('change',e=>importData(e.target.files?.[0]));
     $('logoutButton').addEventListener('click',()=>{closeModal('settingsOverlay');endSession();});
     $('loginButton').addEventListener('click',doLogin);$('passwordInput').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-    for(const id of ['editorOverlay','settingsOverlay','spaceOverlay']) $(id).addEventListener('click',e=>{if(e.target===$(id))closeModal(id);});
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'){for(const id of ['editorOverlay','settingsOverlay','spaceOverlay'])closeModal(id);}});
+    for(const id of ['editorOverlay','settingsOverlay','spaceOverlay','mobileSpacesOverlay']) $(id).addEventListener('click',e=>{if(e.target===$(id)){closeModal(id);renderNotes();}});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){for(const id of ['editorOverlay','settingsOverlay','spaceOverlay','mobileSpacesOverlay'])closeModal(id);renderNotes();}});
   }
   function setupDate() { const date=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});$('todayChip').textContent=date.charAt(0).toUpperCase()+date.slice(1); }
   async function init() {
     setupDate();setupTheme();bindEvents();setupSearch();render();
+    const badge=$('previewBadge');
+    if(badge && previewMode) {
+      badge.hidden=false;
+      document.body.dataset.preview='true';
+    }
     if(serverMode){
       if(state.token){try{await reloadRemote();}catch(e){if(state.token) showToast(e.message);}}
       else showLogin();
     }
   }
+  // Frontend-only extensions consume this read-only snapshot. No extra API,
+  // database migration or permissions are introduced.
+  window.BrainV2 = Object.freeze({
+    snapshot() {
+      return {
+        notes: serverMode && !state.remoteReady ? [] : state.notes.map(n=>({
+          id:n.id,title:n.title,content:n.content,space:n.space,tags:[...(n.tags||[])],
+          pinned:!!n.pinned,archived:!!n.archived,updated_at:n.updated_at
+        })),
+        spaces: serverMode && !state.remoteReady ? [] : state.spaces.map(space=>({...space})),
+        ready:!serverMode || state.remoteReady
+      };
+    },
+    openNote(id) { if (typeof id==='string') openEditor(id); },
+    filterSpace(name) {
+      if (typeof name!=='string' || !state.spaces.some(space=>space.name===name)) return;
+      setFilter('space:'+name);
+      $('notesGrid').scrollIntoView({behavior:'smooth',block:'start'});
+    },
+    filterPinned() {
+      setFilter('pinned');
+      $('notesGrid').scrollIntoView({behavior:'smooth',block:'start'});
+    },
+    focusCapture() {
+      $('quickCapture').scrollIntoView({behavior:'smooth',block:'center'});
+      $('quickInput').focus();
+    }
+  });
   init();
 })();
