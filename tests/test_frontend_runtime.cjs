@@ -103,7 +103,7 @@ const themes=fs.readFileSync('visual-themes.js','utf8');
   assert.equal(m.document.body.style.overflow,'hidden');
   m.document.getElementById('editorClose').click();
   assert.equal(m.document.body.style.overflow,'');
-  mobile.close();
+  mobile.window.close();
 
   console.log('Brain V2 DOM smoke: capture, edit (PC/mobile), spaces, search, filters and themes OK');
 })().catch(error=>{console.error(error);process.exitCode=1;});
