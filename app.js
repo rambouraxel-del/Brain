@@ -54,7 +54,11 @@
   function closeModal(id) {
     $(id).hidden = true;
     if (id === 'editorOverlay') document.body.classList.remove('editor-side-open');
-    if (![...document.querySelectorAll('.modal-overlay')].some(el => !el.hidden)) document.body.style.overflow = '';
+    // A desktop side editor isn't a blocking modal. Closing settings should
+    // restore scrolling even when the note pane remains open.
+    const blocking=[...document.querySelectorAll('.modal-overlay')].some(el =>
+      !el.hidden && !(el.id === 'editorOverlay' && sideEditorEnabled()));
+    document.body.style.overflow = blocking ? 'hidden' : '';
   }
   function showLogin(message = '') { $('loginError').textContent = message; showModal('loginOverlay'); setTimeout(() => $('passwordInput').focus(), 80); }
   function endSession() {
