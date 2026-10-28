@@ -31,6 +31,10 @@ jobs:
           node --check config.js
           node --check visual-themes.js
           node tests/test_frontend_v2.cjs
+      - name: Test de parcours frontend (DOM simulé)
+        run: |
+          npm install --no-save --ignore-scripts jsdom@26.1.0
+          node tests/test_frontend_runtime.cjs
 
       - name: Vérifier l'image Docker avec l'utilisateur non privilégié
         run: |
